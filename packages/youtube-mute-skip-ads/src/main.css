@@ -1,0 +1,30 @@
+#movie_player.ad-showing video {
+  filter: blur(100px) opacity(0.25) grayscale(0.5);
+}
+
+#movie_player.ad-showing .ytp-title,
+#movie_player.ad-showing .ytp-title-channel,
+.ytp-ad-visit-advertiser-button {
+  filter: blur(4px) opacity(0.5) grayscale(0.5);
+  transition: 0.05s filter ease;
+
+  &:hover,
+  &:focus-within {
+    filter: none;
+  }
+}
+
+#movie_player.ad-showing .caption-window,
+.ytp-ad-player-overlay-flyout-cta,
+ytd-action-companion-ad-renderer,
+ytd-display-ad-renderer,
+ytd-ad-slot-renderer,
+ytd-promoted-sparkles-web-renderer {
+  filter: blur(10px) opacity(0.25) grayscale(0.5);
+  transition: 0.05s filter ease;
+
+  &:hover,
+  &:focus-within {
+    filter: none;
+  }
+}
