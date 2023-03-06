@@ -78,6 +78,12 @@ function reloadPage(): void {
   if (playerElem == null || !("getCurrentTime" in playerElem)) {
     return;
   }
+
+  const notifDiv = document.createElement("div");
+  notifDiv.setAttribute("class", "youtube-mute-skip-ads-reload-notification");
+  notifDiv.innerHTML = `<div aria-live="assertive" aria-atomic="true">Reloading<br/><small>(Youtube Mute and Skip Ads)</small></div>`;
+  document.body.append(notifDiv);
+
   const currentTime = playerElem.getCurrentTime();
 
   var searchParams = new URLSearchParams(window.location.search);
