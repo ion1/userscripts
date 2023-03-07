@@ -96,8 +96,10 @@ function reloadPage(): void {
 }
 
 function adBadgeAdded(elem: Element): void {
+  // In English, the format is "Ad 1 of 2".
+  // In Finnish, the format is "Mainos 1/2".
   const adCounter = elem.textContent?.match(
-    /^[^0-9]*([0-9]+)\/([0-9]+)[^0-9]*$/
+    /^[^0-9]*([0-9]+)[^0-9]+([0-9]+)[^0-9]*$/
   )?.[1];
   console.debug(
     "youtube-mute-skip-ads: Ad badge added with counter =",
