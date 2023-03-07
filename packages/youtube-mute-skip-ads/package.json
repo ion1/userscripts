@@ -1,10 +1,10 @@
 {
   "name": "youtube-mute-skip-ads",
-  "description": "Mutes, blurs and skips ads on YouTube. Reloads the page if unskippable ads are too long. The consistent skipping (rather than ad blocking) on the desktop seems to make more ads skippable on mobile as well.",
+  "description": "Mutes, blurs and skips ads on YouTube. Reloads the page (maintaining the position in the video) if unskippable ads are too long. The consistent skipping (rather than ad blocking) on the desktop seems to make more ads skippable on mobile as well.",
   "author": "ion",
   "homepage": "https://github.com/ion1/userscripts/tree/master/packages/youtube-mute-skip-ads",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
