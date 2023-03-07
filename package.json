@@ -1,0 +1,9 @@
+{
+  "name": "userscripts",
+  "description": "ion's userscripts",
+  "private": true,
+  "scripts": {
+    "build": "pnpm recursive run build"
+  },
+  "packageManager": "pnpm@7.29.0"
+}
