@@ -2,6 +2,8 @@
 
 import "./main.css";
 
+const logPrefix = "youtube-mute-skip-ads:";
+
 // Reload the page if an ad with a higher count starts playing.
 const adMaxCount = 1;
 // Reload the page if an unskippable ad with a longer length starts playing.
@@ -37,6 +39,13 @@ type VideoProperties = {
 function setVideoProperties(props: VideoProperties): void {
   const video = document.querySelector(videoSelector);
   if (!(video instanceof HTMLVideoElement)) {
+    console.error(
+      logPrefix,
+      "Expected",
+      JSON.stringify(videoSelector),
+      "to be a video element, got:",
+      video?.cloneNode(true)
+    );
     return;
   }
 
@@ -50,20 +59,29 @@ function setVideoProperties(props: VideoProperties): void {
 function toggleMuteTwice(): void {
   for (const elem of document.getElementsByClassName(muteButtonClass)) {
     if (!(elem instanceof HTMLElement)) {
+      console.error(
+        logPrefix,
+        "Expected",
+        JSON.stringify(muteButtonClass),
+        "to be an HTML element, got:",
+        elem.cloneNode(true)
+      );
       continue;
     }
     elem.click();
     elem.click();
+    return;
   }
+  console.error(logPrefix, "Failed to find", JSON.stringify(muteButtonClass));
 }
 
 function adUIAdded(_elem: Element): void {
-  console.info("youtube-mute-skip-ads: An ad is playing, muting");
+  console.info(logPrefix, "An ad is playing, muting");
   setVideoProperties({ muted: true });
 }
 
 function adUIRemoved(_elem: Element): void {
-  console.info("youtube-mute-skip-ads: An ad is no longer playing, unmuting");
+  console.info(logPrefix, "An ad is no longer playing, unmuting");
   toggleMuteTwice();
 }
 
@@ -75,7 +93,22 @@ function reloadPage(): void {
   const playerElem = <YoutubePlayerElement | Element | null>(
     document.getElementById(playerId)
   );
-  if (playerElem == null || !("getCurrentTime" in playerElem)) {
+  if (playerElem == null) {
+    console.error(
+      logPrefix,
+      "Expected",
+      JSON.stringify(playerId),
+      "to be a player element, got:",
+      playerElem
+    );
+    return;
+  }
+  if (!("getCurrentTime" in playerElem)) {
+    console.error(
+      logPrefix,
+      "The player element doesn't have getCurrentTime:",
+      playerElem.cloneNode(true)
+    );
     return;
   }
 
@@ -85,13 +118,18 @@ function reloadPage(): void {
   document.body.append(notifDiv);
 
   const currentTime = playerElem.getCurrentTime();
+  if (typeof currentTime !== "number") {
+    console.error(
+      logPrefix,
+      "Expected a number, getCurrentTime returned:",
+      currentTime
+    );
+    return;
+  }
 
   var searchParams = new URLSearchParams(window.location.search);
   searchParams.set("t", `${Math.floor(currentTime)}s`);
-  console.info(
-    "youtube-mute-skip-ads: Reloading with t =",
-    searchParams.get("t")
-  );
+  console.info(logPrefix, "Reloading with t =", searchParams.get("t"));
   window.location.search = searchParams.toString();
 }
 
@@ -101,14 +139,20 @@ function adBadgeAdded(elem: Element): void {
   const adCounter = elem.textContent?.match(
     /^[^0-9]*([0-9]+)[^0-9]+([0-9]+)[^0-9]*$/
   )?.[1];
-  console.debug(
-    "youtube-mute-skip-ads: Ad badge added with counter =",
-    adCounter
-  );
+  if (adCounter == null) {
+    console.error(
+      logPrefix,
+      "Failed to parse the ad badge:",
+      elem.cloneNode(true)
+    );
+    return;
+  }
+  console.debug(logPrefix, "Ad badge added with counter =", adCounter);
 
-  if (adCounter != null && Number(adCounter) > adMaxCount) {
+  if (Number(adCounter) > adMaxCount) {
     console.info(
-      "youtube-mute-skip-ads: Ad counter exceeds maximum, reloading page:",
+      logPrefix,
+      "Ad counter exceeds maximum, reloading page:",
       adCounter,
       ">",
       adMaxCount
@@ -120,18 +164,22 @@ function adBadgeAdded(elem: Element): void {
 function preskipAdded(elem: Element): void {
   const adTime = elem.textContent?.match(/^[^0-9]*([0-9]+)[^0-9]*$/)?.[1];
   console.debug(
-    "youtube-mute-skip-ads: Ad preskip added with countdown =",
-    adTime
+    logPrefix,
+    "Ad preskip added with countdown =",
+    adTime,
+    ":",
+    elem.cloneNode(true)
   );
 
   if (adTime == null) {
-    console.info("youtube-mute-skip-ads: No ad countdown, reloading page");
+    console.info(logPrefix, "No ad countdown, reloading page");
     reloadPage();
   }
 
   if (Number(adTime) > adMaxTime) {
     console.info(
-      "youtube-mute-skip-ads: Ad countdown exceeds maximum, reloading page:",
+      logPrefix,
+      "Ad countdown exceeds maximum, reloading page:",
       adTime,
       ">",
       adMaxTime
@@ -143,26 +191,29 @@ function preskipAdded(elem: Element): void {
 function clickSkipIfVisible(button: HTMLElement): boolean {
   const isVisible = button.offsetParent !== null;
   if (isVisible) {
-    console.info("youtube-mute-skip-ads: Skipping");
+    console.info(logPrefix, "Skipping");
     button.click();
   }
   return isVisible;
 }
 
 function skipAdded(elem: Element): void {
-  console.debug("youtube-mute-skip-ads: Skip added");
+  console.debug(logPrefix, "Skip added");
 
   const button = elem.getElementsByClassName(skipButtonClass)?.[0];
   if (!(button instanceof HTMLElement)) {
     console.error(
-      "youtube-mute-skip-ads: Failed to find skip button:",
-      elem.outerHTML
+      logPrefix,
+      "Expected",
+      JSON.stringify(skipButtonClass),
+      "to be an HTML element, got:",
+      elem.cloneNode(true)
     );
     return;
   }
 
   if (!clickSkipIfVisible(button)) {
-    console.info("youtube-mute-skip-ads: Skip button is invisible, waiting");
+    console.info(logPrefix, "Skip button is invisible, waiting");
 
     const skipObserver = new MutationObserver(() => {
       clickSkipIfVisible(button);
@@ -178,12 +229,13 @@ function skipAdded(elem: Element): void {
 function overlayCloseAdded(elem: Element): void {
   if (!(elem instanceof HTMLElement)) {
     console.error(
-      "youtube-mute-skip-ads: Overlay close added, not an HTMLElement?",
-      elem.outerHTML
+      logPrefix,
+      "Expected overlay close to be an HTML element, got:",
+      elem.cloneNode(true)
     );
     return;
   }
-  console.info("youtube-mute-skip-ads: Overlay close added, clicking");
+  console.info(logPrefix, "Overlay close added, clicking");
   elem.click();
 }
 
