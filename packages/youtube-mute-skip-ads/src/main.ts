@@ -87,7 +87,7 @@ function reloadPage(): void {
   const currentTime = playerElem.getCurrentTime();
 
   var searchParams = new URLSearchParams(window.location.search);
-  searchParams.set("t", "" + Math.floor(currentTime) + "s");
+  searchParams.set("t", `${Math.floor(currentTime)}s`);
   console.info(
     "youtube-mute-skip-ads: Reloading with t =",
     searchParams.get("t")
