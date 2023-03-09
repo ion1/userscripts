@@ -49,6 +49,8 @@ function setVideoProperties(props: VideoProperties): void {
     return;
   }
 
+  // Mute the video element directly, leaving the mute state of the YouTube player
+  // unchanged (whether muted or unmuted by the user).
   if (props.muted != null) {
     video.muted = props.muted;
   }
