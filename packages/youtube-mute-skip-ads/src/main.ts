@@ -18,17 +18,34 @@ const preskipClass = "ytp-ad-preview-text";
 const skipContainerClass = "ytp-ad-skip-button-slot";
 const skipButtonClass = "ytp-ad-skip-button";
 const overlayCloseButtonClass = "ytp-ad-overlay-close-button";
+const areYouThereTag = "ytmusic-you-there-renderer";
 
-function getSelfOrChildrenByClassName(
+type Selector = "class" | "tag";
+
+function getSelfOrChildrenBy(
   node: Node,
-  className: string
+  selector: Selector,
+  name: string
 ): ArrayLike<Element> & Iterable<Element> {
   if (!(node instanceof Element)) {
     return [];
-  } else if (node.classList.contains(className)) {
-    return [node];
+  }
+
+  if (selector === "class") {
+    if (node.classList.contains(name)) {
+      return [node];
+    } else {
+      return node.getElementsByClassName(name);
+    }
+  } else if (selector === "tag") {
+    if (node.tagName.toLowerCase() === name.toLowerCase()) {
+      return [node];
+    } else {
+      return node.getElementsByTagName(name);
+    }
   } else {
-    return node.getElementsByClassName(className);
+    const impossible: never = selector;
+    throw new Error(`Impossible selector: ${JSON.stringify(impossible)}`);
   }
 }
 
@@ -241,18 +258,73 @@ function overlayCloseAdded(elem: Element): void {
   elem.click();
 }
 
-const addedMap = [
-  { className: adUIClass, func: adUIAdded },
-  { className: adBadgeClass, func: adBadgeAdded },
-  { className: preskipClass, func: preskipAdded },
-  { className: skipContainerClass, func: skipAdded },
-  { className: overlayCloseButtonClass, func: overlayCloseAdded },
+function areYouThereAdded(elem: Element): void {
+  for (const button of elem.getElementsByTagName("button")) {
+    console.info(logPrefix, "Are-you-there added, clicking button");
+    button.click();
+    return;
+  }
+
+  console.info(
+    logPrefix,
+    "Are-you-there added but doesn't have a button yet, waiting"
+  );
+
+  const buttonObserver = new MutationObserver((mutations) => {
+    for (const mut of mutations) {
+      if (mut.type === "childList") {
+        for (const parentNode of mut.addedNodes) {
+          for (const button of getSelfOrChildrenBy(
+            parentNode,
+            "tag",
+            "button"
+          )) {
+            if (!(button instanceof HTMLElement)) {
+              console.error(
+                logPrefix,
+                "Are-you-there button: expected an HTML element, got:",
+                button.cloneNode(true)
+              );
+              continue;
+            }
+
+            console.info(logPrefix, "Are-you-there button added, clicking");
+            button.click();
+            buttonObserver.disconnect();
+            return;
+          }
+        }
+      }
+    }
+  });
+
+  buttonObserver.observe(elem, {
+    childList: true,
+    subtree: true,
+  });
+}
+
+type CallbackMap = {
+  selector: Selector;
+  name: string;
+  func: (elem: Element) => void;
+}[];
+
+const addedMap: CallbackMap = [
+  { selector: "class", name: adUIClass, func: adUIAdded },
+  { selector: "class", name: adBadgeClass, func: adBadgeAdded },
+  { selector: "class", name: preskipClass, func: preskipAdded },
+  { selector: "class", name: skipContainerClass, func: skipAdded },
+  { selector: "class", name: overlayCloseButtonClass, func: overlayCloseAdded },
+  { selector: "tag", name: areYouThereTag, func: areYouThereAdded },
 ];
 
-const removedMap = [{ className: adUIClass, func: adUIRemoved }];
+const removedMap: CallbackMap = [
+  { selector: "class", name: adUIClass, func: adUIRemoved },
+];
 
-for (const { className, func } of addedMap) {
-  for (const elem of document.getElementsByClassName(className)) {
+for (const { selector, name, func } of addedMap) {
+  for (const elem of getSelfOrChildrenBy(document.body, selector, name)) {
     func(elem);
   }
 }
@@ -261,22 +333,16 @@ const observer = new MutationObserver((mutations) => {
   for (const mut of mutations) {
     if (mut.type === "childList") {
       for (const parentNode of mut.addedNodes) {
-        for (const { className, func } of addedMap) {
-          for (const node of getSelfOrChildrenByClassName(
-            parentNode,
-            className
-          )) {
+        for (const { selector, name, func } of addedMap) {
+          for (const node of getSelfOrChildrenBy(parentNode, selector, name)) {
             func(node);
           }
         }
       }
 
       for (const parentNode of mut.removedNodes) {
-        for (const { className, func } of removedMap) {
-          for (const node of getSelfOrChildrenByClassName(
-            parentNode,
-            className
-          )) {
+        for (const { selector, name, func } of removedMap) {
+          for (const node of getSelfOrChildrenBy(parentNode, selector, name)) {
             func(node);
           }
         }
