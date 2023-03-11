@@ -22,7 +22,7 @@ export function showNotification(params: {
 
   if (params.description != null) {
     const descrElem = document.createElement("div");
-    descrElem.textContent = params.description ?? "";
+    descrElem.textContent = params.description;
     notifElem.appendChild(descrElem);
   }
 
