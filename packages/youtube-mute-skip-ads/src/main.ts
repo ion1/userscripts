@@ -10,6 +10,7 @@ const logPrefix = "youtube-mute-skip-ads:";
 const adMaxTime = 7;
 
 const notificationKey = "youtube-mute-skip-ads-notification";
+const restoreFocusKey = "youtube-mute-skip-ads-restore-focus";
 
 const playerId = "movie_player";
 const videoSelector = "#movie_player video";
@@ -36,6 +37,22 @@ function reloadedNotification(): void {
   }
 }
 reloadedNotification();
+
+function storeFocusState(): void {
+  const id = document.activeElement?.id;
+  if (id != null && id !== "") {
+    sessionStorage.setItem(restoreFocusKey, id);
+  }
+}
+
+let focusElementId = sessionStorage.getItem(restoreFocusKey);
+sessionStorage.removeItem(restoreFocusKey);
+
+function restoreFocusState(elem: HTMLElement): void {
+  console.info(logPrefix, "Restoring focus to", JSON.stringify(elem.id));
+  elem.focus();
+  focusElementId = null;
+}
 
 type Selector = "class" | "tag";
 
@@ -159,6 +176,8 @@ function reloadPage(description: string): void {
   }
 
   reloadNotification(description);
+
+  storeFocusState();
 
   var searchParams = new URLSearchParams(window.location.search);
   searchParams.set("t", `${Math.floor(currentTime)}s`);
@@ -337,6 +356,13 @@ for (const { selector, name, func } of addedMap) {
 }
 
 const observer = new MutationObserver((mutations) => {
+  if (focusElementId != null) {
+    const elem = document.getElementById(focusElementId);
+    if (elem) {
+      restoreFocusState(elem);
+    }
+  }
+
   for (const mut of mutations) {
     if (mut.type === "childList") {
       for (const parentNode of mut.addedNodes) {
