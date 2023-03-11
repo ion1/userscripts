@@ -2,10 +2,14 @@
 
 import "./main.css";
 
+import { showNotification } from "./notification";
+
 const logPrefix = "youtube-mute-skip-ads:";
 
 // Reload the page if an unskippable ad with a longer length starts playing.
 const adMaxTime = 7;
+
+const notificationKey = "youtube-mute-skip-ads-notification";
 
 const playerId = "movie_player";
 const videoSelector = "#movie_player video";
@@ -17,6 +21,21 @@ const skipContainerClass = "ytp-ad-skip-button-slot";
 const skipButtonClass = "ytp-ad-skip-button";
 const overlayCloseButtonClass = "ytp-ad-overlay-close-button";
 const areYouThereTag = "ytmusic-you-there-renderer";
+
+function reloadNotification(description: string): void {
+  showNotification({ heading: "⟳ Reloading", description });
+  sessionStorage.setItem(notificationKey, description);
+}
+
+function reloadedNotification(): void {
+  const description = sessionStorage.getItem(notificationKey);
+  sessionStorage.removeItem(notificationKey);
+
+  if (description != null) {
+    showNotification({ heading: "✓ Reloaded", description, fadeOut: true });
+  }
+}
+reloadedNotification();
 
 type Selector = "class" | "tag";
 
@@ -106,7 +125,7 @@ type YoutubePlayerElement = {
   getCurrentTime(): number;
 };
 
-function reloadPage(): void {
+function reloadPage(description: string): void {
   const playerElem = <YoutubePlayerElement | Element | null>(
     document.getElementById(playerId)
   );
@@ -129,11 +148,6 @@ function reloadPage(): void {
     return;
   }
 
-  const notifDiv = document.createElement("div");
-  notifDiv.setAttribute("class", "youtube-mute-skip-ads-reload-notification");
-  notifDiv.innerHTML = `<div aria-live="assertive" aria-atomic="true">Reloading<br/><small>(Youtube Mute and Skip Ads)</small></div>`;
-  document.body.append(notifDiv);
-
   const currentTime = playerElem.getCurrentTime();
   if (typeof currentTime !== "number") {
     console.error(
@@ -143,6 +157,8 @@ function reloadPage(): void {
     );
     return;
   }
+
+  reloadNotification(description);
 
   var searchParams = new URLSearchParams(window.location.search);
   searchParams.set("t", `${Math.floor(currentTime)}s`);
@@ -165,7 +181,9 @@ function adBadgeAdded(elem: Element): void {
 
   if (numbers.length > 0 && !numbers.includes(1)) {
     console.info(logPrefix, "Ad counter exceeds 1, reloading page");
-    reloadPage();
+    // Get the "2 of 2" or "2/2" part.
+    const adCounterText = elem.textContent?.match(/[0-9](?:.*[0-9])?/)?.[0];
+    reloadPage(`Ad counter: ${adCounterText}`);
   }
 }
 
@@ -181,7 +199,7 @@ function preskipAdded(elem: Element): void {
 
   if (adTime == null) {
     console.info(logPrefix, "No ad countdown, reloading page");
-    reloadPage();
+    reloadPage("No ad countdown");
   }
 
   if (Number(adTime) > adMaxTime) {
@@ -192,7 +210,7 @@ function preskipAdded(elem: Element): void {
       ">",
       adMaxTime
     );
-    reloadPage();
+    reloadPage(`Ad countdown: ${Number(adTime)} s`);
   }
 }
 
