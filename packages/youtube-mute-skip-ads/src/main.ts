@@ -202,7 +202,7 @@ function adBadgeAdded(elem: Element): void {
     console.info(logPrefix, "Ad counter exceeds 1, reloading page");
     // Get the "2 of 2" or "2/2" part.
     const adCounterText = elem.textContent?.match(/[0-9](?:.*[0-9])?/)?.[0];
-    reloadPage(`Ad counter: ${adCounterText}`);
+    reloadPage(`Reason: ad counter: ${adCounterText}`);
   }
 }
 
@@ -218,7 +218,7 @@ function preskipAdded(elem: Element): void {
 
   if (adTime == null) {
     console.info(logPrefix, "No ad countdown, reloading page");
-    reloadPage("No ad countdown");
+    reloadPage("Reason: an ad without a countdown");
   }
 
   if (Number(adTime) > adMaxTime) {
@@ -229,7 +229,7 @@ function preskipAdded(elem: Element): void {
       ">",
       adMaxTime
     );
-    reloadPage(`Ad countdown: ${Number(adTime)} s`);
+    reloadPage(`Reason: too long ad (${Number(adTime)} s)`);
   }
 }
 
