@@ -4,7 +4,7 @@
   "author": "ion",
   "homepage": "https://github.com/ion1/userscripts/tree/master/packages/youtube-mute-skip-ads",
   "private": true,
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "scripts": {
     "dev": "vite",

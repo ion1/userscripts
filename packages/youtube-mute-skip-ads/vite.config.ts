@@ -12,6 +12,9 @@ export default defineConfig({
   plugins: [
     monkey({
       entry: "src/main.ts",
+      build: {
+        minifyCss: false,
+      },
       userscript: {
         name: "YouTube Mute and Skip Ads",
         namespace: "https://github.com/ion1/userscripts",
