@@ -4,8 +4,6 @@ import "./main.css";
 
 const logPrefix = "youtube-mute-skip-ads:";
 
-// Reload the page if an ad with a higher count starts playing.
-const adMaxCount = 1;
 // Reload the page if an unskippable ad with a longer length starts playing.
 const adMaxTime = 7;
 
@@ -155,27 +153,18 @@ function reloadPage(): void {
 function adBadgeAdded(elem: Element): void {
   // In English, the format is "Ad 1 of 2".
   // In Finnish, the format is "Mainos 1/2".
-  const adCounter = elem.textContent?.match(
-    /^[^0-9]*([0-9]+)[^0-9]+([0-9]+)[^0-9]*$/
-  )?.[1];
-  if (adCounter == null) {
-    console.error(
-      logPrefix,
-      "Failed to parse the ad badge:",
-      elem.cloneNode(true)
-    );
-    return;
-  }
-  console.debug(logPrefix, "Ad badge added with counter =", adCounter);
+  // If any numbers are parsed and none of them are 1, reload the page.
+  const numbers = (elem.textContent?.match(/[0-9]+/g) ?? []).map(Number);
+  console.debug(
+    logPrefix,
+    "Ad badge added with text =",
+    JSON.stringify(elem.textContent),
+    "numbers =",
+    JSON.stringify(numbers)
+  );
 
-  if (Number(adCounter) > adMaxCount) {
-    console.info(
-      logPrefix,
-      "Ad counter exceeds maximum, reloading page:",
-      adCounter,
-      ">",
-      adMaxCount
-    );
+  if (numbers.length > 0 && !numbers.includes(1)) {
+    console.info(logPrefix, "Ad counter exceeds 1, reloading page");
     reloadPage();
   }
 }
