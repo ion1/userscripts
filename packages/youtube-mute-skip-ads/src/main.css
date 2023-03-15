@@ -21,7 +21,8 @@
 ytd-action-companion-ad-renderer,
 ytd-display-ad-renderer,
 ytd-ad-slot-renderer,
-ytd-promoted-sparkles-web-renderer {
+ytd-promoted-sparkles-web-renderer,
+ytd-player-legacy-desktop-watch-ads-renderer {
   filter: blur(10px) opacity(0.25) grayscale(0.5);
   @media (prefers-reduced-motion: no-preference) {
     transition: 0.05s filter linear;
