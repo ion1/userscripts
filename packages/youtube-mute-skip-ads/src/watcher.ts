@@ -1,0 +1,423 @@
+import { debugging } from "./debugging";
+
+export type SelectorType = "id" | "class" | "tag";
+
+export class Watcher {
+  name: string;
+
+  element: HTMLElement | null;
+
+  onCreated: ((elem: HTMLElement) => void)[];
+  onRemoved: ((elem: HTMLElement) => void)[];
+
+  nodeObserver: MutationObserver | null;
+  nodeWatchers: { selector: SelectorType; name: string; watcher: Watcher }[];
+
+  textObserver: MutationObserver | null;
+  onTextChanged: ((text: string | null) => void)[];
+
+  visibilityAncestor: HTMLElement | null;
+  visibilityObserver: IntersectionObserver | null;
+  isVisible: boolean | null;
+  visibilityWatchers: Watcher[];
+
+  constructor(name: string, elem?: HTMLElement) {
+    this.name = name;
+
+    this.element = null;
+
+    this.onCreated = [];
+    this.onRemoved = [];
+
+    this.nodeObserver = null;
+    this.nodeWatchers = [];
+
+    this.textObserver = null;
+    this.onTextChanged = [];
+
+    this.visibilityAncestor = null;
+    this.visibilityObserver = null;
+    this.isVisible = null;
+    this.visibilityWatchers = [];
+
+    if (!!elem) {
+      this.connect(elem);
+    }
+  }
+
+  assertElement(): HTMLElement {
+    if (!this.element) {
+      throw new Error(`Watcher not connected to an element`);
+    }
+    return this.element;
+  }
+
+  assertVisibilityAncestor(): HTMLElement {
+    if (!this.visibilityAncestor) {
+      throw new Error(`Watcher is missing a visibilityAncestor`);
+    }
+    return this.visibilityAncestor;
+  }
+
+  isConnected(): boolean {
+    return this.element != null;
+  }
+
+  connect(element: HTMLElement, visibilityAncestor?: HTMLElement): void {
+    // Currently assuming that no selector matches more than one element.
+    if (!!this.element) {
+      // Watcher already connected.
+      if (this.element !== element) {
+        // Watcher already connected to a different element.
+        console.error(
+          `Watcher already connected to`,
+          this.element,
+          `while trying to connect to`,
+          element
+        );
+      }
+      return;
+    }
+
+    this.element = element;
+    this.visibilityAncestor = visibilityAncestor ?? null;
+
+    if (debugging) {
+      console.debug(`${this.name}: Connect:`, this.element.cloneNode(true));
+    }
+
+    for (const f of this.onCreated) {
+      f(this.element);
+    }
+
+    for (const { selector, name, watcher } of this.nodeWatchers) {
+      for (const descElem of getDescendantsBy(this.element, selector, name)) {
+        watcher.connect(descElem, this.element);
+      }
+    }
+
+    for (const f of this.onTextChanged) {
+      f(this.element.textContent);
+    }
+
+    // The visibilityObserver will trigger automatically if the element is visible
+    // already. No need to handle visibilityWatchers here.
+
+    this.registerNodeObserver();
+    this.registerTextObserver();
+    this.registerVisibilityObserver();
+  }
+
+  disconnect(): void {
+    if (!this.element) {
+      // Watcher already disconnected
+      return;
+    }
+
+    if (debugging) {
+      console.debug(`${this.name}: Disconnect:`, this.element.cloneNode(true));
+    }
+
+    for (const child of this.nodeWatchers) {
+      child.watcher.disconnect();
+    }
+
+    for (const f of this.onTextChanged) {
+      f(null);
+    }
+
+    for (const child of this.visibilityWatchers) {
+      child.disconnect();
+    }
+
+    this.deregisterNodeObserver();
+    this.deregisterTextObserver();
+    this.deregisterVisibilityObserver();
+
+    for (const f of this.onRemoved) {
+      f(this.element);
+    }
+
+    this.element = null;
+  }
+
+  registerNodeObserver(): void {
+    if (!!this.nodeObserver) {
+      // Already registered.
+      return;
+    }
+
+    if (this.nodeWatchers.length === 0) {
+      // No watchers, no need for an observer.
+      return;
+    }
+
+    const elem = this.assertElement();
+
+    this.nodeObserver = new MutationObserver((mutations) => {
+      for (const mut of mutations) {
+        for (const node of mut.addedNodes) {
+          for (const { selector, name, watcher } of this.nodeWatchers) {
+            for (const descElem of getSelfOrDescendantsBy(
+              node,
+              selector,
+              name
+            )) {
+              watcher.connect(descElem, elem);
+            }
+          }
+        }
+
+        for (const node of mut.removedNodes) {
+          for (const { selector, name, watcher } of this.nodeWatchers) {
+            for (const _descElem of getSelfOrDescendantsBy(
+              node,
+              selector,
+              name
+            )) {
+              watcher.disconnect();
+            }
+          }
+        }
+      }
+    });
+
+    this.nodeObserver.observe(elem, {
+      subtree: true,
+      childList: true,
+    });
+  }
+
+  registerTextObserver(): void {
+    if (!!this.textObserver) {
+      // Already registered.
+      return;
+    }
+
+    if (this.onTextChanged.length === 0) {
+      // No callbacks, no need for an observer.
+      return;
+    }
+
+    const elem = this.assertElement();
+
+    this.textObserver = new MutationObserver((_mutations) => {
+      for (const f of this.onTextChanged) {
+        f(elem.textContent);
+      }
+    });
+
+    this.textObserver.observe(elem, {
+      subtree: true,
+      // This is needed when elements are replaced to update their text.
+      childList: true,
+      characterData: true,
+    });
+  }
+
+  registerVisibilityObserver(): void {
+    if (!!this.visibilityObserver) {
+      // Already registered.
+      return;
+    }
+
+    if (this.visibilityWatchers.length === 0) {
+      // No watchers, no need for an observer.
+      return;
+    }
+
+    this.isVisible = false;
+
+    const elem = this.assertElement();
+    const visibilityAncestor = this.assertVisibilityAncestor();
+
+    this.visibilityObserver = new IntersectionObserver(
+      (entries) => {
+        const oldVisible = this.isVisible;
+
+        for (const entry of entries) {
+          this.isVisible = entry.isIntersecting;
+        }
+
+        if (this.isVisible !== oldVisible) {
+          if (!!this.isVisible) {
+            for (const watcher of this.visibilityWatchers) {
+              watcher.connect(elem, visibilityAncestor);
+            }
+          } else {
+            for (const watcher of this.visibilityWatchers) {
+              watcher.disconnect();
+            }
+          }
+        }
+      },
+      {
+        root: visibilityAncestor,
+      }
+    );
+
+    this.visibilityObserver.observe(elem);
+  }
+
+  deregisterNodeObserver(): void {
+    if (!this.nodeObserver) {
+      // Already deregistered.
+      return;
+    }
+
+    // Throwing away any pending events.
+    this.nodeObserver.disconnect();
+    this.nodeObserver = null;
+  }
+
+  deregisterTextObserver(): void {
+    if (!this.textObserver) {
+      // Already deregistered.
+      return;
+    }
+
+    // Throwing away any pending events.
+    this.textObserver.disconnect();
+    this.textObserver = null;
+  }
+
+  deregisterVisibilityObserver(): void {
+    if (!this.visibilityObserver) {
+      // Already deregistered.
+      return;
+    }
+
+    // Throwing away any pending events.
+    this.visibilityObserver.disconnect();
+    this.visibilityObserver = null;
+
+    this.isVisible = null;
+  }
+
+  lifecycle(
+    onCreated: (elem: HTMLElement) => void,
+    onRemoved?: (elem: HTMLElement) => void
+  ): Watcher {
+    this.onCreated.push(onCreated);
+    if (!!onRemoved) {
+      this.onRemoved.push(onRemoved);
+    }
+
+    if (!!this.element) {
+      onCreated(this.element);
+    }
+
+    return this;
+  }
+
+  descendant(selector: SelectorType, name: string): Watcher {
+    const watcher = new Watcher(`${this.name} → ${name}`);
+
+    this.nodeWatchers.push({ selector, name, watcher });
+
+    if (!!this.element) {
+      for (const descElem of getDescendantsBy(this.element, selector, name)) {
+        watcher.connect(descElem, this.element);
+      }
+
+      this.registerNodeObserver();
+    }
+
+    return watcher;
+  }
+
+  id(idName: string): Watcher {
+    return this.descendant("id", idName);
+  }
+
+  klass(className: string): Watcher {
+    return this.descendant("class", className);
+  }
+
+  tag(tagName: string): Watcher {
+    return this.descendant("tag", tagName);
+  }
+
+  visible(): Watcher {
+    const watcher = new Watcher(`${this.name} (visible)`);
+
+    this.visibilityWatchers.push(watcher);
+
+    if (!!this.element) {
+      const visibilityAncestor = this.assertVisibilityAncestor();
+
+      if (!!this.isVisible) {
+        // The observer is already registered, connect manually as it wouldn't
+        // trigger otherwise.
+        watcher.connect(this.element, visibilityAncestor);
+      }
+
+      this.registerVisibilityObserver();
+    }
+
+    return watcher;
+  }
+
+  text(f: (text: string | null) => void): Watcher {
+    this.onTextChanged.push(f);
+    if (!!this.element) {
+      f(this.element.textContent);
+
+      this.registerTextObserver();
+    }
+
+    return this;
+  }
+}
+
+function getSelfOrDescendantsBy(
+  node: Node,
+  selector: SelectorType,
+  name: string
+): HTMLElement[] {
+  if (!(node instanceof HTMLElement)) {
+    return [];
+  }
+
+  if (selector === "id" || selector === "class" || selector === "tag") {
+    if (
+      (selector === "id" && node.id === name) ||
+      (selector === "class" && node.classList.contains(name)) ||
+      (selector === "tag" && node.tagName.toLowerCase() === name.toLowerCase())
+    ) {
+      return [node];
+    } else {
+      return getDescendantsBy(node, selector, name);
+    }
+  } else {
+    const impossible: never = selector;
+    throw new Error(`Impossible selector type: ${JSON.stringify(impossible)}`);
+  }
+}
+
+function getDescendantsBy(
+  node: Node,
+  selector: SelectorType,
+  name: string
+): HTMLElement[] {
+  if (!(node instanceof HTMLElement)) {
+    return [];
+  }
+
+  let cssSelector = "";
+
+  if (selector === "id") {
+    cssSelector += "#";
+  } else if (selector === "class") {
+    cssSelector += ".";
+  } else if (selector === "tag") {
+    // No CSS prefix.
+  } else {
+    const impossible: never = selector;
+    throw new Error(`Impossible selector type: ${JSON.stringify(impossible)}`);
+  }
+
+  cssSelector += CSS.escape(name);
+
+  return Array.from(node.querySelectorAll(cssSelector));
+}
