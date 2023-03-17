@@ -143,29 +143,55 @@ function reloadPage(description: string): void {
     );
     return;
   }
-  if (!("getCurrentTime" in playerElem)) {
+  if (!("getCurrentTime" in playerElem && "getDuration" in playerElem)) {
     console.error(
       logPrefix,
-      "The player element doesn't have getCurrentTime:",
+      "The player element doesn't have getCurrentTime/getDuration:",
       playerElem.cloneNode(true)
     );
     return;
   }
-  if (typeof playerElem.getCurrentTime !== "function") {
+  if (
+    typeof playerElem.getCurrentTime !== "function" ||
+    typeof playerElem.getDuration !== "function"
+  ) {
     console.error(
       logPrefix,
-      "getCurrentTime is not a function:",
-      playerElem.getCurrentTime
+      "getCurrentTime/getDuration is not a function:",
+      playerElem.getCurrentTime,
+      playerElem.getDuration
     );
     return;
   }
   const currentTime = playerElem.getCurrentTime();
-  if (typeof currentTime !== "number") {
+  const duration = playerElem.getDuration();
+  if (typeof currentTime !== "number" || typeof duration !== "number") {
     console.error(
       logPrefix,
-      "Expected a number, getCurrentTime returned:",
-      currentTime
+      "Expected a number, currentTime:",
+      currentTime,
+      "duration:",
+      duration
     );
+    return;
+  }
+
+  if (debugging) {
+    console.debug(
+      logPrefix,
+      "currentTime:",
+      currentTime,
+      "duration:",
+      duration
+    );
+  }
+
+  if (Math.floor(currentTime) === Math.floor(duration)) {
+    // Do not reload if we are at the very end of the video. Trying to seek to the last
+    // second seems to jump back to the beginning.
+    if (debugging) {
+      console.debug(logPrefix, "Not reloading; at the end of the video");
+    }
     return;
   }
 
