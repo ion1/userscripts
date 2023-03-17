@@ -261,7 +261,7 @@ export class Watcher {
 
   deregisterNodeObserver(): void {
     if (!this.nodeObserver) {
-      // Already deregistered.
+      // Already unregistered.
       return;
     }
 
@@ -272,7 +272,7 @@ export class Watcher {
 
   deregisterTextObserver(): void {
     if (!this.textObserver) {
-      // Already deregistered.
+      // Already unregistered.
       return;
     }
 
@@ -283,7 +283,7 @@ export class Watcher {
 
   deregisterVisibilityObserver(): void {
     if (!this.visibilityObserver) {
-      // Already deregistered.
+      // Already unregistered.
       return;
     }
 
