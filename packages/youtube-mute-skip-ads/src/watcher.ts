@@ -86,8 +86,8 @@ export class Watcher {
       console.debug(`${this.name}: Connect:`, this.element.cloneNode(true));
     }
 
-    for (const f of this.onCreated) {
-      f(this.element);
+    for (const callback of this.onCreated) {
+      callback(this.element);
     }
 
     for (const { selector, name, watcher } of this.nodeWatchers) {
@@ -96,8 +96,8 @@ export class Watcher {
       }
     }
 
-    for (const f of this.onTextChanged) {
-      f(this.element.textContent);
+    for (const callback of this.onTextChanged) {
+      callback(this.element.textContent);
     }
 
     // The visibilityObserver will trigger automatically if the element is visible
@@ -122,8 +122,8 @@ export class Watcher {
       child.watcher.disconnect();
     }
 
-    for (const f of this.onTextChanged) {
-      f(null);
+    for (const callback of this.onTextChanged) {
+      callback(null);
     }
 
     for (const child of this.visibilityWatchers) {
@@ -134,8 +134,8 @@ export class Watcher {
     this.deregisterTextObserver();
     this.deregisterVisibilityObserver();
 
-    for (const f of this.onRemoved) {
-      f(this.element);
+    for (const callback of this.onRemoved) {
+      callback(this.element);
     }
 
     this.element = null;
@@ -202,8 +202,8 @@ export class Watcher {
     const elem = this.assertElement();
 
     this.textObserver = new MutationObserver((_mutations) => {
-      for (const f of this.onTextChanged) {
-        f(elem.textContent);
+      for (const callback of this.onTextChanged) {
+        callback(elem.textContent);
       }
     });
 
@@ -358,10 +358,10 @@ export class Watcher {
     return watcher;
   }
 
-  text(f: (text: string | null) => void): Watcher {
-    this.onTextChanged.push(f);
+  text(callback: (text: string | null) => void): Watcher {
+    this.onTextChanged.push(callback);
     if (!!this.element) {
-      f(this.element.textContent);
+      callback(this.element.textContent);
 
       this.registerTextObserver();
     }
