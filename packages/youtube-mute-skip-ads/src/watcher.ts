@@ -16,6 +16,12 @@ export class Watcher {
   textObserver: MutationObserver | null;
   onTextChanged: ((text: string | null) => void)[];
 
+  onAttrChanged: {
+    name: string;
+    callback: (text: string | null) => void;
+    observer: MutationObserver | null;
+  }[];
+
   visibilityAncestor: HTMLElement | null;
   visibilityObserver: IntersectionObserver | null;
   isVisible: boolean | null;
@@ -34,6 +40,8 @@ export class Watcher {
 
     this.textObserver = null;
     this.onTextChanged = [];
+
+    this.onAttrChanged = [];
 
     this.visibilityAncestor = null;
     this.visibilityObserver = null;
@@ -100,11 +108,16 @@ export class Watcher {
       callback(this.element.textContent);
     }
 
+    for (const { name, callback } of this.onAttrChanged) {
+      callback(this.element.getAttribute(name));
+    }
+
     // The visibilityObserver will trigger automatically if the element is visible
     // already. No need to handle visibilityWatchers here.
 
     this.registerNodeObserver();
     this.registerTextObserver();
+    this.registerAttrObservers();
     this.registerVisibilityObserver();
   }
 
@@ -126,12 +139,17 @@ export class Watcher {
       callback(null);
     }
 
+    for (const { callback } of this.onAttrChanged) {
+      callback(null);
+    }
+
     for (const child of this.visibilityWatchers) {
       child.disconnect();
     }
 
     this.deregisterNodeObserver();
     this.deregisterTextObserver();
+    this.deregisterAttrObservers();
     this.deregisterVisibilityObserver();
 
     for (const callback of this.onRemoved) {
@@ -215,6 +233,28 @@ export class Watcher {
     });
   }
 
+  registerAttrObservers(): void {
+    const elem = this.assertElement();
+
+    for (let handler of this.onAttrChanged) {
+      if (!!handler.observer) {
+        // Already registered.
+        continue;
+      }
+
+      const { name, callback } = handler;
+
+      handler.observer = new MutationObserver((_mutations) => {
+        callback(elem.getAttribute(name));
+      });
+
+      handler.observer.observe(elem, {
+        attributes: true,
+        attributeFilter: [name],
+      });
+    }
+  }
+
   registerVisibilityObserver(): void {
     if (!!this.visibilityObserver) {
       // Already registered.
@@ -279,6 +319,19 @@ export class Watcher {
     // Throwing away any pending events.
     this.textObserver.disconnect();
     this.textObserver = null;
+  }
+
+  deregisterAttrObservers(): void {
+    for (let handler of this.onAttrChanged) {
+      if (!handler.observer) {
+        // Already unregistered.
+        continue;
+      }
+
+      // Throwing away any pending events.
+      handler.observer.disconnect();
+      handler.observer = null;
+    }
   }
 
   deregisterVisibilityObserver(): void {
@@ -364,6 +417,18 @@ export class Watcher {
       callback(this.element.textContent);
 
       this.registerTextObserver();
+    }
+
+    return this;
+  }
+
+  attr(name: string, callback: (text: string | null) => void): Watcher {
+    this.onAttrChanged.push({ name, callback, observer: null });
+
+    if (!!this.element) {
+      callback(this.element.getAttribute(name));
+
+      this.registerAttrObservers();
     }
 
     return this;
