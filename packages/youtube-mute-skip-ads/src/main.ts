@@ -6,238 +6,44 @@ import { debugging } from "./debugging";
 
 import { logPrefix } from "./log";
 import { Watcher } from "./watcher";
-import { showNotification } from "./notification";
+import {
+  Reloader,
+  reloadedNotification,
+  focusElementId,
+  restoreFocusState,
+} from "./reloader";
+import { getVideoElement, getMuteButton } from "./utils";
 
-// Reload the page if an unskippable ad with a longer length starts playing.
-const adMaxTime = 7;
-
-const notificationKey = "youtube-mute-skip-ads-notification";
-const restoreFocusKey = "youtube-mute-skip-ads-restore-focus";
-
-const playerId = "movie_player";
-const videoSelector = "#movie_player video";
-const muteButtonClass = "ytp-mute-button";
-
-type ParsedText<T> = { text: string; parsed: T };
-
-type AdState = {
-  reloading: boolean;
-  adCounter: ParsedText<number[]> | null;
-  // In the bottom left of the video.
-  adDurationRemaining: ParsedText<number> | null;
-  // The preskip might exist but not have a countdown.
-  hasPreskip: boolean;
-  // In the preskip box preceding the skip button.
-  preskipRemaining: ParsedText<number> | null;
-};
-
-const adState: AdState = {
-  reloading: false,
-  adCounter: null,
-  adDurationRemaining: null,
-  hasPreskip: false,
-  preskipRemaining: null,
-};
-
-function reloadNotification(description: string): void {
-  showNotification({ heading: "⟳ Reloading", description });
-  sessionStorage.setItem(notificationKey, description);
-}
-
-function reloadedNotification(): void {
-  const description = sessionStorage.getItem(notificationKey);
-  sessionStorage.removeItem(notificationKey);
-
-  if (description != null) {
-    showNotification({ heading: "✓ Reloaded", description, fadeOut: true });
-  }
-}
 reloadedNotification();
+const reloader = new Reloader();
 
-function storeFocusState(): void {
-  const id = document.activeElement?.id;
-  if (id != null && id !== "") {
-    sessionStorage.setItem(restoreFocusKey, id);
-  }
-}
+function adUIAdded(_elem: Element): void {
+  console.info(logPrefix, "An ad is playing, muting");
 
-let focusElementId = sessionStorage.getItem(restoreFocusKey);
-sessionStorage.removeItem(restoreFocusKey);
-
-function restoreFocusState(elem: HTMLElement): void {
-  if (focusElementId == null) {
-    // Only restore once.
-    return;
-  }
-
-  console.info(logPrefix, "Restoring focus to", JSON.stringify(elem.id));
-  elem.focus();
-  focusElementId = null;
-}
-
-type VideoProperties = {
-  muted: boolean;
-};
-
-function setVideoProperties(props: VideoProperties): void {
-  const video = document.querySelector(videoSelector);
-  if (!(video instanceof HTMLVideoElement)) {
-    console.error(
-      logPrefix,
-      "Expected",
-      JSON.stringify(videoSelector),
-      "to be a video element, got:",
-      video?.cloneNode(true)
-    );
+  const video = getVideoElement();
+  if (video == null) {
+    // The function logs the error.
     return;
   }
 
   // Mute the video element directly, leaving the mute state of the YouTube player
   // unchanged (whether muted or unmuted by the user).
-  if (props.muted != null) {
-    video.muted = props.muted;
-  }
-}
-
-// Toggle the mute button twice to reset video.muted to the user preference,
-// whether muted or unmuted.
-function toggleMuteTwice(): void {
-  for (const elem of document.getElementsByClassName(muteButtonClass)) {
-    if (!(elem instanceof HTMLElement)) {
-      console.error(
-        logPrefix,
-        "Expected",
-        JSON.stringify(muteButtonClass),
-        "to be an HTML element, got:",
-        elem.cloneNode(true)
-      );
-      continue;
-    }
-    elem.click();
-    elem.click();
-    return;
-  }
-  console.error(logPrefix, "Failed to find", JSON.stringify(muteButtonClass));
-}
-
-function adUIAdded(_elem: Element): void {
-  console.info(logPrefix, "An ad is playing, muting");
-  setVideoProperties({ muted: true });
+  video.muted = true;
 }
 
 function adUIRemoved(_elem: Element): void {
   console.info(logPrefix, "An ad is no longer playing, unmuting");
-  toggleMuteTwice();
-}
 
-function reloadPage(description: string): void {
-  const playerElem = document.getElementById(playerId);
-  if (playerElem == null) {
-    console.error(
-      logPrefix,
-      "Expected",
-      JSON.stringify(playerId),
-      "to be a player element, got:",
-      playerElem
-    );
-    return;
-  }
-  if (!("getCurrentTime" in playerElem && "getDuration" in playerElem)) {
-    console.error(
-      logPrefix,
-      "The player element doesn't have getCurrentTime/getDuration:",
-      playerElem.cloneNode(true)
-    );
-    return;
-  }
-  if (
-    typeof playerElem.getCurrentTime !== "function" ||
-    typeof playerElem.getDuration !== "function"
-  ) {
-    console.error(
-      logPrefix,
-      "getCurrentTime/getDuration is not a function:",
-      playerElem.getCurrentTime,
-      playerElem.getDuration
-    );
-    return;
-  }
-  const currentTime = playerElem.getCurrentTime();
-  const duration = playerElem.getDuration();
-  if (typeof currentTime !== "number" || typeof duration !== "number") {
-    console.error(
-      logPrefix,
-      "Expected a number, currentTime:",
-      currentTime,
-      "duration:",
-      duration
-    );
+  const elem = getMuteButton();
+  if (elem == null) {
+    // The function logs the error.
     return;
   }
 
-  if (debugging) {
-    console.debug(
-      logPrefix,
-      "currentTime:",
-      currentTime,
-      "duration:",
-      duration
-    );
-  }
-
-  if (Math.floor(currentTime) === Math.floor(duration)) {
-    // Do not reload if we are at the very end of the video. Trying to seek to the last
-    // second seems to jump back to the beginning.
-    if (debugging) {
-      console.debug(logPrefix, "Not reloading; at the end of the video");
-    }
-    return;
-  }
-
-  reloadNotification(description);
-
-  storeFocusState();
-
-  adState.reloading = true;
-
-  var searchParams = new URLSearchParams(window.location.search);
-  searchParams.set("t", `${Math.floor(currentTime)}s`);
-  console.info(logPrefix, "Reloading with t =", searchParams.get("t"));
-  window.location.search = searchParams.toString();
-}
-
-function maybeReloadPage(): void {
-  if (adState.reloading) {
-    // Already reloading.
-    return;
-  }
-
-  // If any numbers are parsed and none of them are 1, reload the page.
-  if (!!adState.adCounter && !adState.adCounter.parsed.includes(1)) {
-    console.info(logPrefix, "Ad counter exceeds 1, reloading page");
-    reloadPage(`Reason: ad counter: ${adState.adCounter.text}`);
-    return;
-  }
-
-  if (!!adState.adDurationRemaining && adState.hasPreskip) {
-    let time = adState.adDurationRemaining.parsed;
-    if (!!adState.preskipRemaining) {
-      // Preskip might not have a number, but if it does, take it into account.
-      time = Math.min(time, adState.preskipRemaining.parsed);
-    }
-
-    if (time > adMaxTime) {
-      console.info(
-        logPrefix,
-        "Ad duration remaining exceeds maximum, reloading page:",
-        time,
-        ">",
-        adMaxTime
-      );
-      reloadPage(`Reason: ad duration: ${time}\u00A0s`);
-      return;
-    }
-  }
+  // Toggle the mute button twice to reset video.muted to the user preference,
+  // whether muted or unmuted.
+  elem.click();
+  elem.click();
 }
 
 function adCounterUpdated(fullText: string | null): void {
@@ -250,20 +56,18 @@ function adCounterUpdated(fullText: string | null): void {
   // Get the "1 of 2" or "1/2" part.
   const text = fullText?.match(/[0-9](?:.*[0-9])?/)?.[0] ?? null;
   if (text == null) {
-    adState.adCounter = null;
+    reloader.updateAdCounter(null);
     return;
   }
 
   // Get the individual numbers, such as [1, 2].
   const counter = (text.match(/[0-9]+/g) ?? []).map(Number);
   if (counter.length === 0) {
-    adState.adCounter = null;
+    reloader.updateAdCounter(null);
     return;
   }
 
-  adState.adCounter = { text: text, parsed: counter };
-
-  maybeReloadPage();
+  reloader.updateAdCounter({ text: text, parsed: counter });
 }
 
 function durationRemainingUpdated(fullText: string | null): void {
@@ -274,7 +78,7 @@ function durationRemainingUpdated(fullText: string | null): void {
   // The format is "0:15".
   const match = fullText?.match(/^(?:(?:([0-9]+):)?([0-9]+):)?([0-9]+)$/);
   if (match == null) {
-    adState.adDurationRemaining = null;
+    reloader.updateAdDurationRemaining(null);
     return;
   }
 
@@ -287,9 +91,7 @@ function durationRemainingUpdated(fullText: string | null): void {
   // preskip remaining time is calculated.
   const time = (h * 60 + m) * 60 + s + 1;
 
-  adState.adDurationRemaining = { text, parsed: time };
-
-  maybeReloadPage();
+  reloader.updateAdDurationRemaining({ text, parsed: time });
 }
 
 function preskipUpdated(fullText: string | null): void {
@@ -297,7 +99,7 @@ function preskipUpdated(fullText: string | null): void {
     console.debug(logPrefix, "Preskip remaining:", JSON.stringify(fullText));
   }
 
-  adState.hasPreskip = fullText != null;
+  const hasPreskip = fullText != null;
 
   // If the ad is not skippable:
   // In English, the format is one of:
@@ -310,12 +112,13 @@ function preskipUpdated(fullText: string | null): void {
   // If the ad is skippable, the format is "6".
   const text = fullText?.match(/^[^0-9]*([0-9]+)[^0-9]*$/)?.[1];
   if (text == null) {
-    adState.preskipRemaining = null;
+    reloader.updatePreskip({ hasPreskip, remaining: null });
   } else {
-    adState.preskipRemaining = { text, parsed: Number(text) };
+    reloader.updatePreskip({
+      hasPreskip,
+      remaining: { text, parsed: Number(text) },
+    });
   }
-
-  maybeReloadPage();
 }
 
 function click(description: string) {
