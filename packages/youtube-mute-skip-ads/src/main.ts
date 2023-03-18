@@ -4,10 +4,9 @@ import "./main.css";
 
 import { debugging } from "./debugging";
 
+import { logPrefix } from "./log";
 import { Watcher } from "./watcher";
 import { showNotification } from "./notification";
-
-const logPrefix = "youtube-mute-skip-ads:";
 
 // Reload the page if an unskippable ad with a longer length starts playing.
 const adMaxTime = 7;
