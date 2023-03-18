@@ -4,7 +4,10 @@
 
 #movie_player.ad-showing .ytp-title,
 #movie_player.ad-showing .ytp-title-channel,
-.ytp-ad-visit-advertiser-button {
+.ytp-ad-visit-advertiser-button,
+ytmusic-app:has(#movie_player.ad-showing)
+  ytmusic-player-bar
+  :is(.title, .subtitle) {
   filter: blur(4px) opacity(0.5) grayscale(0.5);
   @media (prefers-reduced-motion: no-preference) {
     transition: 0.05s filter linear;
