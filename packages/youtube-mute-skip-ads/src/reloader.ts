@@ -54,6 +54,19 @@ export function restoreFocusState(elem: HTMLElement): void {
   focusElementId = null;
 }
 
+/**
+ * ┌───────────────────────────────────500 ms delay, see enterReloadCanceled──┐
+ * │                                                                          │
+ * │   ┌───────────────┐   ┌─────────┐   ┌───────────┐   ┌─────────────────┐  │
+ * └──►│ not-reloading ├──►│ pausing ├──►│ reloading ├──►│ reload-canceled ├──┘
+ *     └───┬─────────┬─┘   └─────────┘   └───────────┘   └─────────────────┘
+ *         │      ▲  │                     ▲
+ *         ▼      │  └────already paused───┘
+ *       ┌────────┴─┐
+ *       │ disabled │
+ *       └──────────┘
+ */
+
 type State =
   | { id: "not-reloading" }
   | { id: "pausing"; description: string; currentTime: number }
