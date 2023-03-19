@@ -296,7 +296,7 @@ export class Reloader {
       reloadCanceledNotification();
 
       this.enterNotReloading();
-    }, 100);
+    }, 500);
   }
 
   dispatchWhileReloadCanceled(): void {
