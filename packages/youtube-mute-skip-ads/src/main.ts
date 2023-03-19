@@ -145,6 +145,15 @@ playerOverlay.klass("ytp-ad-skip-button").visible().lifecycle(click("skip"));
 
 watcher.klass("ytp-ad-overlay-close-button").lifecycle(click("overlay close"));
 
+watcher.tag("ytmusic-app").lifecycle(
+  () => {
+    reloader.updateInYouTubeMusic(true);
+  },
+  () => {
+    reloader.updateInYouTubeMusic(false);
+  }
+);
+
 watcher
   .tag("ytmusic-you-there-renderer")
   .tag("button")

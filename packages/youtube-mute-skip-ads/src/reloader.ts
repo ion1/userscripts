@@ -58,7 +58,8 @@ type State =
   | { id: "not-reloading" }
   | { id: "pausing"; description: string; currentTime: number }
   | { id: "reloading" }
-  | { id: "reload-canceled" };
+  | { id: "reload-canceled" }
+  | { id: "disabled" };
 
 export type ParsedText<T> = {
   text: string;
@@ -76,6 +77,8 @@ export class Reloader {
   // In the preskip box preceding the skip button.
   preskipRemaining: ParsedText<number> | null;
 
+  inYouTubeMusic: boolean;
+
   constructor() {
     this.state = { id: "not-reloading" };
 
@@ -83,6 +86,8 @@ export class Reloader {
     this.adDurationRemaining = null;
     this.hasPreskip = false;
     this.preskipRemaining = null;
+
+    this.inYouTubeMusic = false;
   }
 
   updateAdCounter(value: ParsedText<number[]> | null): void {
@@ -104,6 +109,11 @@ export class Reloader {
     this.dispatch();
   }
 
+  updateInYouTubeMusic(inYouTubeMusic: boolean): void {
+    this.inYouTubeMusic = inYouTubeMusic;
+    this.dispatch();
+  }
+
   setState(state: State): void {
     if (debugging) {
       console.debug(logPrefix, "Watcher state:", JSON.stringify(state));
@@ -121,6 +131,8 @@ export class Reloader {
         return this.dispatchWhileReloading();
       case "reload-canceled":
         return this.dispatchWhileReloadCanceled();
+      case "disabled":
+        return this.dispatchWhileDisabled();
       default:
         const impossible: never = this.state;
         throw new Error(`Impossible state: ${JSON.stringify(impossible)}`);
@@ -132,6 +144,12 @@ export class Reloader {
   }
 
   dispatchWhileNotReloading(): void {
+    if (this.inYouTubeMusic) {
+      return this.enterDisabled(
+        "Not reloading on YouTube Music; it messes up random playlists"
+      );
+    }
+
     if (this.adCounter != null && !this.adCounter.parsed.includes(1)) {
       console.info(logPrefix, "Ad counter exceeds 1, reloading page");
       return this.maybeReload(`Reason: ad counter: ${this.adCounter.text}`);
@@ -284,5 +302,16 @@ export class Reloader {
   dispatchWhileReloadCanceled(): void {
     // Nothing to do until the timer is done.
     return;
+  }
+
+  enterDisabled(reason: string): void {
+    console.info(logPrefix, reason);
+    this.setState({ id: "disabled" });
+  }
+
+  dispatchWhileDisabled(): void {
+    if (!this.inYouTubeMusic) {
+      return this.enterNotReloading();
+    }
   }
 }
