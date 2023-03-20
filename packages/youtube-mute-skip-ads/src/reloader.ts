@@ -298,17 +298,17 @@ export class Reloader {
   dispatchWhileReloading(): void {
     // Nothing to do in general, except if the reload was prevented somehow. In that
     // case, just go back to not-reloading if the ad is gone.
+
     if (this.adDurationRemaining == null && !this.hasPreskip) {
+      // Ad stopped.
+
       if (debugging) {
         console.debug(
           logPrefix,
-          "Watcher:",
-          JSON.stringify({
-            adDurationRemaining: this.adDurationRemaining,
-            hasPreskip: this.hasPreskip,
-          })
+          "Ad stopped while a reload was being attempted"
         );
       }
+
       return this.enterReloadCanceled();
     }
   }
