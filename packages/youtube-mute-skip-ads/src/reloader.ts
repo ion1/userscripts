@@ -55,17 +55,17 @@ export function restoreFocusState(elem: HTMLElement): void {
 }
 
 /**
- * ┌───────────────────────────────────500 ms delay, see enterReloadCanceled──┐
- * │                                                                          │
- * │   ┌───────────────┐   ┌─────────┐   ┌───────────┐   ┌─────────────────┐  │
- * └──►│ not-reloading ├──►│ pausing ├──►│ reloading ├──►│ reload-canceled ├──┘
- *     └─────────────┬─┘   └─────────┘   └───────────┘   └─────────────────┘
- *       ▲     ▲     │                     ▲
- *       │     │     └────already paused───┘
- *       │     ▼
- *       │   ┌───────────────┐
- *       │   │ youtube-music │
- *       │   └───────────────┘
+ * ┌───────────────────────────────500 ms delay, see enterReloadCanceled───┐
+ * │                                                                       │
+ * │   ┌───────────┐   ┌─────────┐   ┌───────────┐   ┌─────────────────┐   │
+ * └──►│   idle    ├──►│ pausing ├──►│ reloading ├──►│ reload-canceled ├───┘
+ *     └─────────┬─┘   └─────────┘   └───────────┘   └─────────────────┘
+ *       ▲   ▲   │                     ▲
+ *       │   │   └────already paused───┘
+ *       │   ▼
+ *       │ ┌───────────────┐
+ *       │ │ youtube-music │
+ *       │ └───────────────┘
  *       ▼
  *     ┌─────────────────┐
  *     │ end-of-video-ad │
@@ -73,7 +73,7 @@ export function restoreFocusState(elem: HTMLElement): void {
  */
 
 type State =
-  | { id: "not-reloading" }
+  | { id: "idle" }
   | { id: "pausing"; description: string; currentTime: number }
   | { id: "reloading" }
   | { id: "reload-canceled" }
@@ -99,7 +99,7 @@ export class Reloader {
   inYouTubeMusic: boolean;
 
   constructor() {
-    this.state = { id: "not-reloading" };
+    this.state = { id: "idle" };
 
     this.adCounter = null;
     this.adDurationRemaining = null;
@@ -142,8 +142,8 @@ export class Reloader {
 
   dispatch(): void {
     switch (this.state.id) {
-      case "not-reloading":
-        return this.dispatchWhileNotReloading();
+      case "idle":
+        return this.dispatchWhileIdle();
       case "pausing":
         return this.dispatchWhilePausing();
       case "reloading":
@@ -160,11 +160,11 @@ export class Reloader {
     }
   }
 
-  enterNotReloading(): void {
-    this.setState({ id: "not-reloading" });
+  enterIdle(): void {
+    this.setState({ id: "idle" });
   }
 
-  dispatchWhileNotReloading(): void {
+  dispatchWhileIdle(): void {
     if (this.inYouTubeMusic) {
       return this.enterYouTubeMusic();
     }
@@ -297,7 +297,7 @@ export class Reloader {
 
   dispatchWhileReloading(): void {
     // Nothing to do in general, except if the reload was prevented somehow. In that
-    // case, just go back to not-reloading if the ad is gone.
+    // case, just go back to idle if the ad is gone.
 
     if (this.adDurationRemaining == null && !this.hasPreskip) {
       // Ad stopped.
@@ -323,7 +323,7 @@ export class Reloader {
     setTimeout(() => {
       reloadCanceledNotification();
 
-      this.enterNotReloading();
+      this.enterIdle();
     }, 500);
   }
 
@@ -342,7 +342,7 @@ export class Reloader {
 
   dispatchWhileYouTubeMusic(): void {
     if (!this.inYouTubeMusic) {
-      return this.enterNotReloading();
+      return this.enterIdle();
     }
   }
 
@@ -366,7 +366,7 @@ export class Reloader {
         console.debug(logPrefix, "End-of-video ad stopped");
       }
 
-      this.enterNotReloading();
+      this.enterIdle();
     }
   }
 }
