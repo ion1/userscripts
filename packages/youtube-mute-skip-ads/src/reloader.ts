@@ -62,9 +62,9 @@ export function restoreFocusState(elem: HTMLElement): void {
  *     └───┬─────────┬─┘   └─────────┘   └───────────┘   └─────────────────┘
  *         │      ▲  │                     ▲
  *         ▼      │  └────already paused───┘
- *       ┌────────┴─┐
- *       │ disabled │
- *       └──────────┘
+ *       ┌────────┴──────┐
+ *       │ youtube-music │
+ *       └───────────────┘
  */
 
 type State =
@@ -72,7 +72,7 @@ type State =
   | { id: "pausing"; description: string; currentTime: number }
   | { id: "reloading" }
   | { id: "reload-canceled" }
-  | { id: "disabled" };
+  | { id: "youtube-music" };
 
 export type ParsedText<T> = {
   text: string;
@@ -144,8 +144,8 @@ export class Reloader {
         return this.dispatchWhileReloading();
       case "reload-canceled":
         return this.dispatchWhileReloadCanceled();
-      case "disabled":
-        return this.dispatchWhileDisabled();
+      case "youtube-music":
+        return this.dispatchWhileYouTubeMusic();
       default:
         const impossible: never = this.state;
         throw new Error(`Impossible state: ${JSON.stringify(impossible)}`);
@@ -158,9 +158,7 @@ export class Reloader {
 
   dispatchWhileNotReloading(): void {
     if (this.inYouTubeMusic) {
-      return this.enterDisabled(
-        "Not reloading on YouTube Music; it messes up random playlists"
-      );
+      return this.enterYouTubeMusic();
     }
 
     if (this.adCounter != null && !this.adCounter.parsed.includes(1)) {
@@ -317,12 +315,15 @@ export class Reloader {
     return;
   }
 
-  enterDisabled(reason: string): void {
-    console.info(logPrefix, reason);
-    this.setState({ id: "disabled" });
+  enterYouTubeMusic(): void {
+    console.info(
+      logPrefix,
+      "Not reloading on YouTube Music; it messes up random playlists"
+    );
+    this.setState({ id: "youtube-music" });
   }
 
-  dispatchWhileDisabled(): void {
+  dispatchWhileYouTubeMusic(): void {
     if (!this.inYouTubeMusic) {
       return this.enterNotReloading();
     }
