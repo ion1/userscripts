@@ -59,12 +59,17 @@ export function restoreFocusState(elem: HTMLElement): void {
  * │                                                                          │
  * │   ┌───────────────┐   ┌─────────┐   ┌───────────┐   ┌─────────────────┐  │
  * └──►│ not-reloading ├──►│ pausing ├──►│ reloading ├──►│ reload-canceled ├──┘
- *     └───┬─────────┬─┘   └─────────┘   └───────────┘   └─────────────────┘
- *         │      ▲  │                     ▲
- *         ▼      │  └────already paused───┘
- *       ┌────────┴──────┐
- *       │ youtube-music │
- *       └───────────────┘
+ *     └─────────────┬─┘   └─────────┘   └───────────┘   └─────────────────┘
+ *       ▲     ▲     │                     ▲
+ *       │     │     └────already paused───┘
+ *       │     ▼
+ *       │   ┌───────────────┐
+ *       │   │ youtube-music │
+ *       │   └───────────────┘
+ *       ▼
+ *     ┌─────────────────┐
+ *     │ end-of-video-ad │
+ *     └─────────────────┘
  */
 
 type State =
@@ -72,7 +77,8 @@ type State =
   | { id: "pausing"; description: string; currentTime: number }
   | { id: "reloading" }
   | { id: "reload-canceled" }
-  | { id: "youtube-music" };
+  | { id: "youtube-music" }
+  | { id: "end-of-video-ad" };
 
 export type ParsedText<T> = {
   text: string;
@@ -146,6 +152,8 @@ export class Reloader {
         return this.dispatchWhileReloadCanceled();
       case "youtube-music":
         return this.dispatchWhileYouTubeMusic();
+      case "end-of-video-ad":
+        return this.dispatchWhileEndOfVideoAd();
       default:
         const impossible: never = this.state;
         throw new Error(`Impossible state: ${JSON.stringify(impossible)}`);
@@ -161,32 +169,11 @@ export class Reloader {
       return this.enterYouTubeMusic();
     }
 
-    if (this.adCounter != null && !this.adCounter.parsed.includes(1)) {
-      console.info(logPrefix, "Ad counter exceeds 1, reloading page");
-      return this.maybeReload(`Reason: ad counter: ${this.adCounter.text}`);
+    if (!(this.adDurationRemaining != null && this.hasPreskip)) {
+      // An ad is not playing.
+      return;
     }
 
-    if (this.adDurationRemaining != null && this.hasPreskip) {
-      let time = this.adDurationRemaining.parsed;
-      if (this.preskipRemaining != null) {
-        // Preskip might not have a number, but if it does, take it into account.
-        time = Math.min(time, this.preskipRemaining.parsed);
-      }
-
-      if (time > adMaxTime) {
-        console.info(
-          logPrefix,
-          "Ad duration remaining exceeds maximum, reloading page:",
-          time,
-          ">",
-          adMaxTime
-        );
-        return this.maybeReload(`Reason: ad duration: ${time}\u00A0s`);
-      }
-    }
-  }
-
-  maybeReload(description: string): void {
     const currentTimeAndDuration = getCurrentTimeAndDuration();
     if (currentTimeAndDuration == null) {
       // The function logs the error.
@@ -204,14 +191,44 @@ export class Reloader {
       );
     }
 
-    if (Math.floor(currentTime) === Math.floor(duration)) {
+    const endOfVideo = Math.floor(currentTime) === Math.floor(duration);
+    if (endOfVideo) {
       // Do not reload if we are at the very end of the video. Trying to seek to the last
       // second seems to jump back to the beginning.
-      if (debugging) {
-        console.debug(logPrefix, "Not reloading; at the end of the video");
-      }
-      return;
+      return this.enterEndOfVideoAd();
     }
+
+    if (this.adCounter != null && !this.adCounter.parsed.includes(1)) {
+      console.info(logPrefix, "Ad counter exceeds 1, reloading page");
+      return this.doReload({
+        description: `Reason: ad counter: ${this.adCounter.text}`,
+        currentTime,
+      });
+    }
+
+    let time = this.adDurationRemaining.parsed;
+    if (this.preskipRemaining != null) {
+      // Preskip might not have a number, but if it does, take it into account.
+      time = Math.min(time, this.preskipRemaining.parsed);
+    }
+
+    if (time > adMaxTime) {
+      console.info(
+        logPrefix,
+        "Ad duration remaining exceeds maximum, reloading page:",
+        time,
+        ">",
+        adMaxTime
+      );
+      return this.doReload({
+        description: `Reason: ad duration: ${time}\u00A0s`,
+        currentTime,
+      });
+    }
+  }
+
+  doReload(info: { description: string; currentTime: number }): void {
+    const { description, currentTime } = info;
 
     const videoElem = getVideoElement();
     if (videoElem == null) {
@@ -326,6 +343,30 @@ export class Reloader {
   dispatchWhileYouTubeMusic(): void {
     if (!this.inYouTubeMusic) {
       return this.enterNotReloading();
+    }
+  }
+
+  enterEndOfVideoAd(): void {
+    if (debugging) {
+      console.debug(logPrefix, "End-of-video started; will not reload");
+    }
+
+    // Show a notification since it's not visually clear whether an ad is an
+    // end-of-video one or not.
+    showNotification({ heading: "End of video", fadeOut: true });
+
+    this.setState({ id: "end-of-video-ad" });
+  }
+
+  dispatchWhileEndOfVideoAd(): void {
+    if (this.adDurationRemaining == null && !this.hasPreskip) {
+      // Ad stopped.
+
+      if (debugging) {
+        console.debug(logPrefix, "End-of-video ad stopped");
+      }
+
+      this.enterNotReloading();
     }
   }
 }
