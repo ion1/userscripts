@@ -5,5 +5,8 @@
   "scripts": {
     "build": "pnpm recursive run build"
   },
-  "packageManager": "pnpm@7.29.0"
+  "packageManager": "pnpm@7.29.0",
+  "workspaces": [
+    "packages/*"
+  ]
 }
