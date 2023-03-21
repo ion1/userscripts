@@ -1,0 +1,8 @@
+{
+  "name": "@ion1/prettier-config",
+  "private": true,
+  "main": "./prettier-config.json",
+  "dependencies": {
+    "prettier": "^2.8.6"
+  }
+}

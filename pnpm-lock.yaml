@@ -5,6 +5,12 @@ importers:
   .:
     specifiers: {}
 
+  packages/prettier-config:
+    specifiers:
+      prettier: ^2.8.6
+    dependencies:
+      prettier: 2.8.6
+
   packages/youtube-mute-skip-ads:
     specifiers:
       '@tsconfig/strictest': ^1.0.2
@@ -474,6 +480,12 @@ packages:
       picocolors: 1.0.0
       source-map-js: 1.0.2
     dev: true
+
+  /prettier/2.8.6:
+    resolution: {integrity: sha512-mtuzdiBbHwPEgl7NxWlqOkithPyp4VN93V7VeHVWBF+ad3I5avc0RVDT4oImXQy9H/AqxA2NSQH8pSxHW6FYbQ==}
+    engines: {node: '>=10.13.0'}
+    hasBin: true
+    dev: false
 
   /resolve/1.22.1:
     resolution: {integrity: sha512-nBpuuYuY5jFsli/JIs1oldw6fOQCBioohqWZg/2hiaOybXOft4lonv85uDOKXdf8rhyK159cxU5cDcK/NKk8zw==}
