@@ -5,11 +5,15 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "moduleResolution": "Node",
+    "moduleResolution": "bundler",
     "sourceMap": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+
+    // Pending https://github.com/tsconfig/bases/issues/160
+    "ignoreDeprecations": "5.0",
+    "verbatimModuleSyntax": true,
+    "importsNotUsedAsValues": "remove"
   },
   "include": ["src"]
 }
