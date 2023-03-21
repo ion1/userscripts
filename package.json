@@ -3,7 +3,9 @@
   "description": "ion's userscripts",
   "private": true,
   "scripts": {
-    "build": "pnpm recursive run build"
+    "build": "pnpm recursive run build",
+    "lint": "pnpm recursive run lint",
+    "format": "pnpm recursive run format"
   },
   "packageManager": "pnpm@7.29.0",
   "workspaces": [

@@ -49,20 +49,20 @@ export class Watcher {
     this.isVisible = null;
     this.visibilityWatchers = [];
 
-    if (!!elem) {
+    if (elem != null) {
       this.connect(elem);
     }
   }
 
   assertElement(): HTMLElement {
-    if (!this.element) {
+    if (this.element == null) {
       throw new Error(`Watcher not connected to an element`);
     }
     return this.element;
   }
 
   assertVisibilityAncestor(): HTMLElement {
-    if (!this.visibilityAncestor) {
+    if (this.visibilityAncestor == null) {
       throw new Error(`Watcher is missing a visibilityAncestor`);
     }
     return this.visibilityAncestor;
@@ -74,7 +74,7 @@ export class Watcher {
 
   connect(element: HTMLElement, visibilityAncestor?: HTMLElement): void {
     // Currently assuming that no selector matches more than one element.
-    if (!!this.element) {
+    if (this.element != null) {
       // Watcher already connected.
       if (this.element !== element) {
         // Watcher already connected to a different element.
@@ -128,7 +128,7 @@ export class Watcher {
   }
 
   disconnect(): void {
-    if (!this.element) {
+    if (this.element == null) {
       // Watcher already disconnected
       return;
     }
@@ -170,7 +170,7 @@ export class Watcher {
   }
 
   registerNodeObserver(): void {
-    if (!!this.nodeObserver) {
+    if (this.nodeObserver != null) {
       // Already registered.
       return;
     }
@@ -217,7 +217,7 @@ export class Watcher {
   }
 
   registerTextObserver(): void {
-    if (!!this.textObserver) {
+    if (this.textObserver != null) {
       // Already registered.
       return;
     }
@@ -246,8 +246,8 @@ export class Watcher {
   registerAttrObservers(): void {
     const elem = this.assertElement();
 
-    for (let handler of this.onAttrChanged) {
-      if (!!handler.observer) {
+    for (const handler of this.onAttrChanged) {
+      if (handler.observer != null) {
         // Already registered.
         continue;
       }
@@ -266,7 +266,7 @@ export class Watcher {
   }
 
   registerVisibilityObserver(): void {
-    if (!!this.visibilityObserver) {
+    if (this.visibilityObserver != null) {
       // Already registered.
       return;
     }
@@ -290,7 +290,7 @@ export class Watcher {
         }
 
         if (this.isVisible !== oldVisible) {
-          if (!!this.isVisible) {
+          if (this.isVisible) {
             for (const watcher of this.visibilityWatchers) {
               watcher.connect(elem, visibilityAncestor);
             }
@@ -310,7 +310,7 @@ export class Watcher {
   }
 
   deregisterNodeObserver(): void {
-    if (!this.nodeObserver) {
+    if (this.nodeObserver == null) {
       // Already unregistered.
       return;
     }
@@ -321,7 +321,7 @@ export class Watcher {
   }
 
   deregisterTextObserver(): void {
-    if (!this.textObserver) {
+    if (this.textObserver == null) {
       // Already unregistered.
       return;
     }
@@ -332,8 +332,8 @@ export class Watcher {
   }
 
   deregisterAttrObservers(): void {
-    for (let handler of this.onAttrChanged) {
-      if (!handler.observer) {
+    for (const handler of this.onAttrChanged) {
+      if (handler.observer == null) {
         // Already unregistered.
         continue;
       }
@@ -345,7 +345,7 @@ export class Watcher {
   }
 
   deregisterVisibilityObserver(): void {
-    if (!this.visibilityObserver) {
+    if (this.visibilityObserver == null) {
       // Already unregistered.
       return;
     }
@@ -362,11 +362,11 @@ export class Watcher {
     onRemoved?: (elem: HTMLElement) => void
   ): Watcher {
     this.onCreated.push(onCreated);
-    if (!!onRemoved) {
+    if (onRemoved != null) {
       this.onRemoved.push(onRemoved);
     }
 
-    if (!!this.element) {
+    if (this.element != null) {
       onCreated(this.element);
     }
 
@@ -378,7 +378,7 @@ export class Watcher {
 
     this.nodeWatchers.push({ selector, name, watcher });
 
-    if (!!this.element) {
+    if (this.element != null) {
       for (const descElem of getDescendantsBy(this.element, selector, name)) {
         watcher.connect(descElem, this.element);
       }
@@ -406,10 +406,10 @@ export class Watcher {
 
     this.visibilityWatchers.push(watcher);
 
-    if (!!this.element) {
+    if (this.element != null) {
       const visibilityAncestor = this.assertVisibilityAncestor();
 
-      if (!!this.isVisible) {
+      if (this.isVisible) {
         // The observer is already registered, connect manually as it wouldn't
         // trigger otherwise.
         watcher.connect(this.element, visibilityAncestor);
@@ -423,7 +423,7 @@ export class Watcher {
 
   text(callback: (text: string | null) => void): Watcher {
     this.onTextChanged.push(callback);
-    if (!!this.element) {
+    if (this.element != null) {
       callback(this.element.textContent);
 
       this.registerTextObserver();
@@ -435,7 +435,7 @@ export class Watcher {
   attr(name: string, callback: (text: string | null) => void): Watcher {
     this.onAttrChanged.push({ name, callback, observer: null });
 
-    if (!!this.element) {
+    if (this.element != null) {
       callback(this.element.getAttribute(name));
 
       this.registerAttrObservers();

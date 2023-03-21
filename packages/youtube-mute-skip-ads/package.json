@@ -10,9 +10,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "prettier --plugin-search-dir . --check . && eslint .",
+    "format": "prettier --plugin-search-dir . --write ."
   },
   "devDependencies": {
+    "@ion1/eslint-config": "workspace:*",
+    "@ion1/prettier-config": "workspace:*",
     "@tsconfig/strictest": "^1.0.2",
     "postcss": "^8.4.21",
     "postcss-nesting": "^11.2.1",

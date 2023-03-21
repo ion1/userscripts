@@ -154,9 +154,10 @@ export class Reloader {
         return this.dispatchWhileYouTubeMusic();
       case "end-of-video-ad":
         return this.dispatchWhileEndOfVideoAd();
-      default:
+      default: {
         const impossible: never = this.state;
         throw new Error(`Impossible state: ${JSON.stringify(impossible)}`);
+      }
     }
   }
 
@@ -287,7 +288,7 @@ export class Reloader {
 
     storeFocusState();
 
-    var searchParams = new URLSearchParams(window.location.search);
+    const searchParams = new URLSearchParams(window.location.search);
     searchParams.set("t", `${Math.floor(currentTime)}s`);
     console.info(logPrefix, "Reloading with t =", searchParams.get("t"));
     window.location.search = searchParams.toString();

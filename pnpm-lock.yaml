@@ -27,6 +27,8 @@ importers:
 
   packages/youtube-mute-skip-ads:
     specifiers:
+      '@ion1/eslint-config': workspace:*
+      '@ion1/prettier-config': workspace:*
       '@tsconfig/strictest': ^1.0.2
       postcss: ^8.4.21
       postcss-nesting: ^11.2.1
@@ -34,6 +36,8 @@ importers:
       vite: ^4.2.1
       vite-plugin-monkey: ^3.0.2
     devDependencies:
+      '@ion1/eslint-config': link:../eslint-config
+      '@ion1/prettier-config': link:../prettier-config
       '@tsconfig/strictest': 1.0.2
       postcss: 8.4.21
       postcss-nesting: 11.2.1_postcss@8.4.21

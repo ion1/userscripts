@@ -1,3 +1,5 @@
+// Required with vite-plugin-monkey.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore isolatedModules
 
 import "./main.css";
