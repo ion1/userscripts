@@ -192,7 +192,8 @@ export class Reloader {
       );
     }
 
-    const endOfVideo = Math.floor(currentTime) === Math.floor(duration);
+    const endOfVideo =
+      duration >= 1 && Math.floor(currentTime) === Math.floor(duration);
     if (endOfVideo) {
       // Do not reload if we are at the very end of the video. Trying to seek to the last
       // second seems to jump back to the beginning.
