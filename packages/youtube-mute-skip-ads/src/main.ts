@@ -15,6 +15,7 @@ import {
   restoreFocusState,
 } from "./reloader";
 import { getVideoElement, getMuteButton } from "./utils";
+import { disableVisibilityChecks } from "./disableVisibilityChecks";
 
 reloadedNotification();
 const reloader = new Reloader();
@@ -129,6 +130,8 @@ function click(description: string) {
     elem.click();
   };
 }
+
+disableVisibilityChecks();
 
 const watcher = new Watcher("body", document.body);
 
