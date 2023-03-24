@@ -25,8 +25,11 @@ jobs:
         with:
           run_install: true
 
+      - name: Lint project
+        run: pnpm run lint
+
       - name: Build project
-        run: pnpm recursive run build
+        run: pnpm run build
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
