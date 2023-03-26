@@ -1,4 +1,5 @@
 import { logPrefix } from "./log";
+import { parse, ParserError } from "./parser";
 
 export const playerId = "movie_player";
 export const videoSelector = "#movie_player video";
@@ -11,50 +12,24 @@ export type CurrentTimeAndDuration = {
 };
 
 export function getCurrentTimeAndDuration(): CurrentTimeAndDuration | null {
-  const playerElem = document.getElementById(playerId);
-  if (playerElem == null) {
-    console.error(
-      logPrefix,
-      "Expected",
-      JSON.stringify(playerId),
-      "to be a player element, got:",
-      playerElem
-    );
+  try {
+    const playerElemP = parse(document.getElementById(playerId)).object();
+
+    const currentTime = playerElemP
+      .method("getCurrentTime")
+      .call()
+      .number().value;
+    const duration = playerElemP.method("getDuration").call().number().value;
+
+    return { currentTime, duration };
+  } catch (e) {
+    if (!(e instanceof ParserError)) {
+      throw e;
+    }
+
+    console.error(logPrefix, e.message);
     return null;
   }
-  if (!("getCurrentTime" in playerElem && "getDuration" in playerElem)) {
-    console.error(
-      logPrefix,
-      "The player element doesn't have getCurrentTime/getDuration:",
-      playerElem.cloneNode(true)
-    );
-    return null;
-  }
-  if (
-    typeof playerElem.getCurrentTime !== "function" ||
-    typeof playerElem.getDuration !== "function"
-  ) {
-    console.error(
-      logPrefix,
-      "getCurrentTime/getDuration is not a function:",
-      playerElem.getCurrentTime,
-      playerElem.getDuration
-    );
-    return null;
-  }
-  const currentTime = playerElem.getCurrentTime();
-  const duration = playerElem.getDuration();
-  if (typeof currentTime !== "number" || typeof duration !== "number") {
-    console.error(
-      logPrefix,
-      "Expected a number, currentTime:",
-      currentTime,
-      "duration:",
-      duration
-    );
-    return null;
-  }
-  return { currentTime, duration };
 }
 
 export function getVideoElement(): HTMLVideoElement | null {
