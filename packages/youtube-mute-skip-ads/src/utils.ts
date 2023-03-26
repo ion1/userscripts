@@ -6,12 +6,13 @@ export const videoSelector = "#movie_player video";
 export const muteButtonSelector =
   ":is(.ytp-mute-button, ytmusic-player-bar tp-yt-paper-icon-button.volume)";
 
-export type CurrentTimeAndDuration = {
+export type PlayerState = {
   currentTime: number;
   duration: number;
+  isLive: boolean;
 };
 
-export function getCurrentTimeAndDuration(): CurrentTimeAndDuration | null {
+export function getPlayerState(): PlayerState | null {
   try {
     const playerElemP = parse(document.getElementById(playerId)).object();
 
@@ -20,8 +21,16 @@ export function getCurrentTimeAndDuration(): CurrentTimeAndDuration | null {
       .call()
       .number().value;
     const duration = playerElemP.method("getDuration").call().number().value;
+    const isLive = playerElemP
+      .method("getPlayerResponse")
+      .call()
+      .object()
+      .property("videoDetails")
+      .object()
+      .property("isLive")
+      .boolean().value;
 
-    return { currentTime, duration };
+    return { currentTime, duration, isLive };
   } catch (e) {
     if (!(e instanceof ParserError)) {
       throw e;

@@ -1,7 +1,7 @@
 import { debugging } from "./debugging";
 import { logPrefix } from "./log";
 import { showNotification } from "./notification";
-import { getCurrentTimeAndDuration, getVideoElement } from "./utils";
+import { getPlayerState, getVideoElement } from "./utils";
 
 // Reload the page if an unskippable ad with a longer length starts playing.
 const adMaxTime = 7;
@@ -175,12 +175,12 @@ export class Reloader {
       return;
     }
 
-    const currentTimeAndDuration = getCurrentTimeAndDuration();
-    if (currentTimeAndDuration == null) {
+    const playerState = getPlayerState();
+    if (playerState == null) {
       // The function logs the error.
       return;
     }
-    const { currentTime, duration } = currentTimeAndDuration;
+    const { currentTime, duration, isLive } = playerState;
 
     if (debugging) {
       console.debug(
@@ -194,7 +194,7 @@ export class Reloader {
 
     const endOfVideo =
       duration >= 1 && Math.floor(currentTime) === Math.floor(duration);
-    if (endOfVideo) {
+    if (endOfVideo && !isLive) {
       // Do not reload if we are at the very end of the video. Trying to seek to the last
       // second seems to jump back to the beginning.
       return this.enterEndOfVideoAd();
