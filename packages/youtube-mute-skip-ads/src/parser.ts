@@ -108,7 +108,7 @@ class Parser<T> {
   }
 
   call(this: Parser<UnknownFunction>, ...args: unknown[]): Parser<unknown> {
-    const result = this.value(args);
+    const result = this.value(...args);
 
     return new Parser([...this.path, "call"], result);
   }
