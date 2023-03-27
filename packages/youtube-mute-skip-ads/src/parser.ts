@@ -24,6 +24,9 @@ export class ParserError extends Error {
 
 export type UnknownFunction = (...args: unknown[]) => unknown;
 
+// Note: the methods with a restriction on the type of "this" do not check the invariant
+// in runtime, only use this from TypeScript.
+
 class Parser<T> {
   path: string[];
   value: T;
