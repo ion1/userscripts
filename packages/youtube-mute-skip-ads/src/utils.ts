@@ -1,5 +1,5 @@
 import { logPrefix } from "./log";
-import { parse, ParserError } from "./parser";
+import { optional, parse, ParserError } from "./parser";
 
 export const playerId = "movie_player";
 export const videoSelector = "#movie_player video";
@@ -21,14 +21,18 @@ export function getPlayerState(): PlayerState | null {
       .call()
       .number().value;
     const duration = playerElemP.method("getDuration").call().number().value;
-    const isLive = playerElemP
-      .method("getPlayerResponse")
-      .call()
-      .object()
-      .property("videoDetails")
-      .object()
-      .property("isLive")
-      .boolean().value;
+    const isLive =
+      optional(
+        () =>
+          playerElemP
+            .method("getPlayerResponse")
+            .call()
+            .object()
+            .property("videoDetails")
+            .object()
+            .property("isLive")
+            .boolean().value
+      ) ?? false;
 
     return { currentTime, duration, isLive };
   } catch (e) {

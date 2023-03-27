@@ -2,6 +2,18 @@ export function parse(value: unknown): Parser<unknown> {
   return new Parser<unknown>([], value);
 }
 
+export function optional<T>(func: () => T): T | null {
+  try {
+    return func();
+  } catch (e) {
+    if (!(e instanceof ParserError)) {
+      throw e;
+    }
+
+    return null;
+  }
+}
+
 export class ParserError extends Error {
   constructor(msg: string) {
     super(msg);
