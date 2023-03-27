@@ -22,6 +22,8 @@ export class ParserError extends Error {
   }
 }
 
+export type UnknownFunction = (...args: unknown[]) => unknown;
+
 class Parser<T> {
   path: string[];
   value: T;
@@ -65,14 +67,16 @@ class Parser<T> {
     return new Parser([...this.path, "object"], this.value);
   }
 
-  function(this: Parser<unknown>): Parser<Function> {
+  function(this: Parser<unknown>): Parser<UnknownFunction> {
     if (!(this.value != null && typeof this.value === "function")) {
       throw new ParserError(
         `${this.pathString()}: Expected function: ${this.value}`
       );
     }
 
-    return new Parser([...this.path, "function"], this.value);
+    const func = this.value as UnknownFunction;
+
+    return new Parser([...this.path, "function"], func);
   }
 
   property(this: Parser<object>, name: string): Parser<unknown> {
@@ -89,10 +93,10 @@ class Parser<T> {
     return new Parser([...this.path, `property ${JSON.stringify(name)}`], prop);
   }
 
-  method(this: Parser<object>, name: string): Parser<Function> {
+  method(this: Parser<object>, name: string): Parser<UnknownFunction> {
     const func = this.property(name).function().value;
 
-    const boundFunc = func.bind(this.value) as Function;
+    const boundFunc = func.bind(this.value) as UnknownFunction;
 
     return new Parser(
       [...this.path, `method ${JSON.stringify(name)}`],
@@ -100,8 +104,8 @@ class Parser<T> {
     );
   }
 
-  call(this: Parser<Function>, ...args: unknown[]): Parser<unknown> {
-    const result = this.value(args) as unknown;
+  call(this: Parser<UnknownFunction>, ...args: unknown[]): Parser<unknown> {
+    const result = this.value(args);
 
     return new Parser([...this.path, "call"], result);
   }
