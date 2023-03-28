@@ -146,7 +146,15 @@ const playerOverlay = watcher
 playerOverlay.klass("ytp-ad-simple-ad-badge").text(adCounterUpdated);
 playerOverlay.klass("ytp-ad-duration-remaining").text(durationRemainingUpdated);
 playerOverlay.klass("ytp-ad-preview-text").text(preskipUpdated);
-playerOverlay.klass("ytp-ad-skip-button").visible().lifecycle(click("skip"));
+
+// For video ads, ytp-ad-skip-button is within ytp-ad-player-overlay, but for fallback
+// ads when the video fails to load, it's within ytp-ad-module. All of them are within
+// movie_player.
+watcher
+  .id("movie_player")
+  .klass("ytp-ad-skip-button")
+  .visible()
+  .lifecycle(click("skip"));
 
 watcher.klass("ytp-ad-overlay-close-button").lifecycle(click("overlay close"));
 
