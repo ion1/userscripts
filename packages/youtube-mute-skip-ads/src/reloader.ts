@@ -5,6 +5,10 @@ import { getPlayerState, getVideoElement } from "./utils";
 
 // Reload the page if an unskippable ad with a longer length starts playing.
 const adMaxTime = 7;
+// Reload the page if the ad counter exceeds 1. YouTube started behaving in a more
+// annoying way on 2023-03-28 and repeatedly showing long ads after the reload; default
+// to false for now.
+const adCounterReload = false;
 
 const notificationKey = "youtube-mute-skip-ads-notification";
 const restoreFocusKey = "youtube-mute-skip-ads-restore-focus";
@@ -200,7 +204,11 @@ export class Reloader {
       return this.enterEndOfVideoAd();
     }
 
-    if (this.adCounter != null && !this.adCounter.parsed.includes(1)) {
+    if (
+      adCounterReload &&
+      this.adCounter != null &&
+      !this.adCounter.parsed.includes(1)
+    ) {
       console.info(logPrefix, "Ad counter exceeds 1, reloading page");
       return this.doReload({
         description: `Reason: ad counter: ${this.adCounter.text}`,
