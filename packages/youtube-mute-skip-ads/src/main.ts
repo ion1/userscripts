@@ -11,6 +11,11 @@ import { Watcher } from "./watcher";
 import { getVideoElement, getMuteButton } from "./utils";
 import { disableVisibilityChecks } from "./disableVisibilityChecks";
 
+// Currently, the video element is replaced after an ad, removing the need to unmute
+// it. In the case that changes, enabling this will click on the mute button twice to
+// restore the mute status to the user preference.
+const unmuteNeeded = false;
+
 function adUIAdded(_elem: Element): void {
   console.info(logPrefix, "An ad is playing, muting");
 
@@ -39,6 +44,10 @@ function adUIAdded(_elem: Element): void {
 }
 
 function adUIRemoved(_elem: Element): void {
+  if (!unmuteNeeded) {
+    return;
+  }
+
   console.info(logPrefix, "An ad is no longer playing, unmuting");
 
   const elem = getMuteButton();
