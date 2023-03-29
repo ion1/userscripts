@@ -1,6 +1,6 @@
 {
   "name": "youtube-mute-skip-ads",
-  "description": "Mutes, blurs and skips ads on YouTube. Reloads the page (maintaining the position in the video) if unskippable ads are too long. Clicks \"yes\" on \"are you there?\" on YouTube Music.",
+  "description": "Mutes, blurs and skips ads on YouTube. Speeds up ad playback. Clicks \"yes\" on \"are you there?\" on YouTube Music.",
   "author": "ion",
   "homepage": "https://github.com/ion1/userscripts/tree/master/packages/youtube-mute-skip-ads",
   "license": "MIT",

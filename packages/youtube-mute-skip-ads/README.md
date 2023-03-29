@@ -1,8 +1,6 @@
 # YouTube Mute and Skip Ads
 
-Mutes, blurs and skips ads on YouTube. Reloads the page (maintaining the position in the video) if unskippable ads are too long.
-
-If the reloading keeps showing more ads over and over again, make sure you are logged in and keep skipping ads. It will eventually have a decent chance to skip the second ad.
+Mutes, blurs and skips ads on YouTube. Speeds up ad playback.
 
 The consistent skipping (rather than ad blocking) on the desktop seems to make more ads skippable on the mobile as well when logged in as the same user. ([This Android app](https://github.com/alfeugds/adskipper#readme) mutes and skips ads in the YouTube app.)
 
