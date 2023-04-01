@@ -25,7 +25,8 @@ ytd-action-companion-ad-renderer,
 ytd-display-ad-renderer,
 ytd-ad-slot-renderer,
 ytd-promoted-sparkles-web-renderer,
-ytd-player-legacy-desktop-watch-ads-renderer {
+ytd-player-legacy-desktop-watch-ads-renderer,
+ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-ads"] {
   filter: blur(10px) opacity(0.25) grayscale(0.5);
   @media (prefers-reduced-motion: no-preference) {
     transition: 0.05s filter linear;
