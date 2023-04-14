@@ -13,8 +13,7 @@ ytmusic-app:has(#movie_player.ad-showing)
     transition: 0.05s filter linear;
   }
 
-  &:hover,
-  &:focus-within {
+  &:is(:hover, :focus-within) {
     filter: none;
   }
 }
@@ -32,8 +31,7 @@ ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-ads"] {
     transition: 0.05s filter linear;
   }
 
-  &:hover,
-  &:focus-within {
+  &:is(:hover, :focus-within) {
     filter: none;
   }
 }
