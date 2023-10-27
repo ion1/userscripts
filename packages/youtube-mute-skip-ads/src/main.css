@@ -9,9 +9,7 @@ ytmusic-app:has(#movie_player.ad-showing)
   ytmusic-player-bar
   :is(.title, .subtitle) {
   filter: blur(4px) opacity(0.5) grayscale(0.5);
-  @media (prefers-reduced-motion: no-preference) {
-    transition: 0.05s filter linear;
-  }
+  transition: 0.05s filter linear;
 
   &:is(:hover, :focus-within) {
     filter: none;
@@ -27,9 +25,7 @@ ytd-promoted-sparkles-web-renderer,
 ytd-player-legacy-desktop-watch-ads-renderer,
 ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-ads"] {
   filter: blur(10px) opacity(0.25) grayscale(0.5);
-  @media (prefers-reduced-motion: no-preference) {
-    transition: 0.05s filter linear;
-  }
+  transition: 0.05s filter linear;
 
   &:is(:hover, :focus-within) {
     filter: none;
