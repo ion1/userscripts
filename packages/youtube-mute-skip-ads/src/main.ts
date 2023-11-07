@@ -87,6 +87,12 @@ watcher
 watcher.klass("ytp-ad-overlay-close-button").lifecycle(click("overlay close"));
 
 watcher
+  .klass("ytp-featured-product")
+  .klass("ytp-suggested-action-badge-dismiss-button-icon")
+  .visible()
+  .lifecycle(click("suggested action close"));
+
+watcher
   .tag("ytmusic-you-there-renderer")
   .tag("button")
   .lifecycle(click("are-you-there"));
