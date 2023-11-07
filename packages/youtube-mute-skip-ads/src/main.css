@@ -23,7 +23,8 @@ ytd-display-ad-renderer,
 ytd-ad-slot-renderer,
 ytd-promoted-sparkles-web-renderer,
 ytd-player-legacy-desktop-watch-ads-renderer,
-ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-ads"] {
+ytd-engagement-panel-section-list-renderer[target-id="engagement-panel-ads"],
+ytd-merch-shelf-renderer {
   filter: blur(10px) opacity(0.25) grayscale(0.5);
   transition: 0.05s filter linear;
 
