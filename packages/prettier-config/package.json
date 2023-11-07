@@ -3,6 +3,6 @@
   "private": true,
   "main": "./prettier-config.json",
   "dependencies": {
-    "prettier": "^2.8.6"
+    "prettier": "^2.8.8"
   }
 }
