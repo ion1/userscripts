@@ -84,6 +84,12 @@ watcher
   .visible()
   .lifecycle(click("skip"));
 
+watcher
+  .id("movie_player")
+  .klass("ytp-ad-skip-button-modern")
+  .visible()
+  .lifecycle(click("skip (new)"));
+
 watcher.klass("ytp-ad-overlay-close-button").lifecycle(click("overlay close"));
 
 watcher
