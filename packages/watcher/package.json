@@ -1,0 +1,25 @@
+{
+  "name": "@ion1/watcher",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "test:once": "vitest run",
+    "format": "prettier --plugin-search-dir . --write .",
+    "lint": "prettier --plugin-search-dir . --check . && eslint ."
+  },
+  "devDependencies": {
+    "@ion1/eslint-config": "workspace:*",
+    "@ion1/prettier-config": "workspace:*",
+    "@tsconfig/strictest": "^2.0.2",
+    "@vitest/browser": "^0.34.6",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.6",
+    "webdriverio": "^8.23.1"
+  },
+  "dependencies": {
+    "@ion1/family": "workspace:^"
+  }
+}
