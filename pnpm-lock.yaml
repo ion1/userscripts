@@ -41,8 +41,8 @@ importers:
         specifier: workspace:*
         version: link:../prettier-config
       '@tsconfig/strictest':
-        specifier: ^1.0.2
-        version: 1.0.2
+        specifier: ^2.0.2
+        version: 2.0.2
       postcss:
         specifier: ^8.4.31
         version: 8.4.31
@@ -355,8 +355,8 @@ packages:
       fastq: 1.15.0
     dev: false
 
-  /@tsconfig/strictest@1.0.2:
-    resolution: {integrity: sha512-IRKlC8cnP7zMz1SDBjyIVyPapkEGWLZ6wkF6Z8T+xU80P9sO5uGXlIUvtzjx+7ehPJRWxkB6CeIDwUfyqNtYkQ==}
+  /@tsconfig/strictest@2.0.2:
+    resolution: {integrity: sha512-jt4jIsWKvUvuY6adJnQJlb/UR7DdjC8CjHI/OaSQruj2yX9/K6+KOvDt/vD6udqos/FUk5Op66CvYT7TBLYO5Q==}
     dev: true
 
   /@types/json-schema@7.0.15:

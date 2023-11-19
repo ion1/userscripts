@@ -17,7 +17,7 @@
   "devDependencies": {
     "@ion1/eslint-config": "workspace:*",
     "@ion1/prettier-config": "workspace:*",
-    "@tsconfig/strictest": "^1.0.2",
+    "@tsconfig/strictest": "^2.0.2",
     "postcss": "^8.4.31",
     "postcss-nesting": "^11.3.0",
     "typescript": "^5.2.2",
