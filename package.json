@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "build": "pnpm recursive run build",
-    "lint": "pnpm recursive run lint",
-    "format": "pnpm recursive run format"
+    "format": "pnpm recursive run format",
+    "lint": "pnpm recursive run lint"
   },
   "packageManager": "pnpm@7.29.0",
   "workspaces": [
