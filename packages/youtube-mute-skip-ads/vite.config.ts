@@ -22,8 +22,8 @@ export default defineConfig({
         icon: "https://www.google.com/s2/favicons?sz=64&domain=youtube.com",
         updateURL: canonicalUrl,
         downloadURL: canonicalUrl,
-        // Display any post-reload notification ASAP.
-        "run-at": "document-body",
+        // Disable visibility checks ASAP
+        "run-at": "document-start",
       },
     }),
   ],
