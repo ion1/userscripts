@@ -4,11 +4,16 @@
   "private": true,
   "scripts": {
     "build": "pnpm recursive run build",
+    "test": "vitest",
+    "test:once": "vitest run",
     "format": "pnpm recursive run format",
     "lint": "pnpm recursive run lint"
   },
   "packageManager": "pnpm@7.29.0",
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "devDependencies": {
+    "vitest": "^0.34.6"
+  }
 }

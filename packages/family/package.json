@@ -1,0 +1,20 @@
+{
+  "name": "@ion1/family",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "test:once": "vitest run",
+    "format": "prettier --plugin-search-dir . --write .",
+    "lint": "prettier --plugin-search-dir . --check . && eslint ."
+  },
+  "devDependencies": {
+    "@ion1/eslint-config": "workspace:*",
+    "@ion1/prettier-config": "workspace:*",
+    "@tsconfig/strictest": "^2.0.2",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.6"
+  }
+}
