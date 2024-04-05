@@ -19,7 +19,7 @@ export function getVideoElement(): HTMLVideoElement | null {
       "Expected",
       JSON.stringify(videoSelector),
       "to be a video element, got:",
-      videoElem?.cloneNode(true)
+      videoElem?.cloneNode(true),
     );
     return null;
   }
@@ -34,7 +34,7 @@ export function getMuteButton(): HTMLElement | null {
         "Expected",
         JSON.stringify(muteButtonSelector),
         "to be an HTML element, got:",
-        elem.cloneNode(true)
+        elem.cloneNode(true),
       );
       continue;
     }
@@ -43,7 +43,7 @@ export function getMuteButton(): HTMLElement | null {
   console.error(
     logPrefix,
     "Failed to find",
-    JSON.stringify(muteButtonSelector)
+    JSON.stringify(muteButtonSelector),
   );
   return null;
 }

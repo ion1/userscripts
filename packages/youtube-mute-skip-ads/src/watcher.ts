@@ -83,7 +83,7 @@ export class Watcher {
           `Watcher already connected to`,
           this.element,
           `while trying to connect to`,
-          element
+          element,
         );
       }
       return;
@@ -96,7 +96,7 @@ export class Watcher {
       console.debug(
         logPrefix,
         `${this.name}: Connect:`,
-        this.element.cloneNode(true)
+        this.element.cloneNode(true),
       );
     }
 
@@ -137,7 +137,7 @@ export class Watcher {
       console.debug(
         logPrefix,
         `${this.name}: Disconnect:`,
-        this.element.cloneNode(true)
+        this.element.cloneNode(true),
       );
     }
 
@@ -189,7 +189,7 @@ export class Watcher {
             for (const descElem of getSelfOrDescendantsBy(
               node,
               selector,
-              name
+              name,
             )) {
               watcher.connect(descElem, elem);
             }
@@ -201,7 +201,7 @@ export class Watcher {
             for (const _descElem of getSelfOrDescendantsBy(
               node,
               selector,
-              name
+              name,
             )) {
               watcher.disconnect();
             }
@@ -303,7 +303,7 @@ export class Watcher {
       },
       {
         root: visibilityAncestor,
-      }
+      },
     );
 
     this.visibilityObserver.observe(elem);
@@ -359,7 +359,7 @@ export class Watcher {
 
   lifecycle(
     onCreated: (elem: HTMLElement) => void,
-    onRemoved?: (elem: HTMLElement) => void
+    onRemoved?: (elem: HTMLElement) => void,
   ): Watcher {
     this.onCreated.push(onCreated);
     if (onRemoved != null) {
@@ -448,7 +448,7 @@ export class Watcher {
 function getSelfOrDescendantsBy(
   node: Node,
   selector: SelectorType,
-  name: string
+  name: string,
 ): HTMLElement[] {
   if (!(node instanceof HTMLElement)) {
     return [];
@@ -473,7 +473,7 @@ function getSelfOrDescendantsBy(
 function getDescendantsBy(
   node: Node,
   selector: SelectorType,
-  name: string
+  name: string,
 ): HTMLElement[] {
   if (!(node instanceof HTMLElement)) {
     return [];

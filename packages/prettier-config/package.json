@@ -1,8 +1,12 @@
 {
   "name": "@ion1/prettier-config",
   "private": true,
-  "main": "./prettier-config.json",
+  "main": "./prettier.config.js",
+  "type": "module",
+  "scripts": {
+    "format": "prettier --write ."
+  },
   "dependencies": {
-    "prettier": "^2.8.8"
+    "prettier": "^3.2.5"
   }
 }

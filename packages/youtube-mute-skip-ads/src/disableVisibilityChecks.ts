@@ -7,7 +7,7 @@ export function disableVisibilityChecks(): void {
       (ev) => {
         ev.stopImmediatePropagation();
       },
-      { capture: true }
+      { capture: true },
     );
   }
 

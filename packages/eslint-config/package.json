@@ -1,12 +1,18 @@
 {
   "name": "@ion1/eslint-config",
   "private": true,
-  "main": "./eslint-config.cjs",
+  "main": "./eslint.config.js",
+  "type": "module",
+  "scripts": {
+    "format": "prettier --write ."
+  },
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
-    "@typescript-eslint/parser": "^5.62.0",
-    "eslint": "^8.53.0",
-    "eslint-config-prettier": "^8.10.0",
-    "typescript": "^5.2.2"
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.1.0",
+    "typescript": "^5.4.4",
+    "typescript-eslint": "^7.5.0"
+  },
+  "devDependencies": {
+    "@ion1/prettier-config": "workspace:*"
   }
 }
