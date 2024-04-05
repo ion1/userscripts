@@ -109,3 +109,7 @@ watcher
   .tag("ytmusic-you-there-renderer")
   .tag("button")
   .lifecycle(click("are-you-there"));
+
+if (debugging) {
+  console.debug(logPrefix, `Started`);
+}
