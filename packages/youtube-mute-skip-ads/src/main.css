@@ -18,6 +18,7 @@ ytmusic-app:has(#movie_player.ad-showing)
 
 #movie_player.ad-showing .caption-window,
 .ytp-ad-player-overlay-flyout-cta,
+.ytp-ad-player-overlay-layout__player-card-container, /* Seen since 2024-04-06. */
 ytd-action-companion-ad-renderer,
 ytd-display-ad-renderer,
 ytd-ad-slot-renderer,

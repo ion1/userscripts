@@ -73,22 +73,29 @@ disableVisibilityChecks();
 
 const watcher = new Watcher("body", document.body);
 
-watcher.klass("ytp-ad-player-overlay").lifecycle(adUIAdded, adUIRemoved);
+const adPlayerOverlayClasses = [
+  "ytp-ad-player-overlay",
+  "ytp-ad-player-overlay-layout", // Seen since 2024-04-06.
+];
+for (const adPlayerOverlayClass of adPlayerOverlayClasses) {
+  watcher.klass(adPlayerOverlayClass).lifecycle(adUIAdded, adUIRemoved);
+}
 
+const adSkipButtonClasses = [
+  "ytp-ad-skip-button",
+  "ytp-ad-skip-button-modern", // Seen since 2023-11-10.
+  "ytp-skip-ad-button", // Seen since 2024-04-06.
+];
 // For video ads, ytp-ad-skip-button is within ytp-ad-player-overlay, but for fallback
 // ads when the video fails to load, it's within ytp-ad-module. All of them are within
 // movie_player.
-watcher
-  .id("movie_player")
-  .klass("ytp-ad-skip-button")
-  .visible()
-  .lifecycle(click("skip"));
-
-watcher
-  .id("movie_player")
-  .klass("ytp-ad-skip-button-modern")
-  .visible()
-  .lifecycle(click("skip (new)"));
+for (const adSkipButtonClass of adSkipButtonClasses) {
+  watcher
+    .id("movie_player")
+    .klass(adSkipButtonClass)
+    .visible()
+    .lifecycle(click(`skip (${adSkipButtonClass})`));
+}
 
 watcher.klass("ytp-ad-overlay-close-button").lifecycle(click("overlay close"));
 
