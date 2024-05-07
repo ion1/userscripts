@@ -4,6 +4,7 @@
 
 #movie_player.ad-showing .ytp-title,
 #movie_player.ad-showing .ytp-title-channel,
+.ytp-visit-advertiser-link,
 .ytp-ad-visit-advertiser-button,
 .ytp-suggested-action-badge,
 ytmusic-app:has(#movie_player.ad-showing)
