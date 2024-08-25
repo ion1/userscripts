@@ -21,6 +21,7 @@ ytmusic-app:has(#movie_player.ad-showing)
 #movie_player.ad-showing .caption-window,
 .ytp-ad-player-overlay-flyout-cta,
 .ytp-ad-player-overlay-layout__player-card-container, /* Seen since 2024-04-06. */
+.ytp-ad-action-interstitial-slot, /* Added on 2024-08-25. */
 ytd-action-companion-ad-renderer,
 ytd-display-ad-renderer,
 ytd-ad-slot-renderer,
@@ -34,4 +35,9 @@ ytd-merch-shelf-renderer {
   &:is(:hover, :focus-within) {
     filter: none;
   }
+}
+
+.ytp-ad-action-interstitial-background-container /* Added on 2024-08-25. */ {
+  /* An image ad in place of the video. */
+  filter: blur(10px) opacity(0.25) grayscale(0.5);
 }
