@@ -3,21 +3,24 @@ import { logPrefix } from "./log";
 
 export type SelectorType = "id" | "class" | "tag";
 
+export type OnCreatedCallback = (elem: HTMLElement) => OnRemovedCallback | void;
+export type OnRemovedCallback = () => void;
+
 export class Watcher {
   name: string;
 
   element: HTMLElement | null;
 
-  onCreated: ((elem: HTMLElement) => void)[];
-  onRemoved: ((elem: HTMLElement) => void)[];
+  onCreatedCallbacks: OnCreatedCallback[];
+  onRemovedCallbacks: OnRemovedCallback[];
 
   nodeObserver: MutationObserver | null;
   nodeWatchers: { selector: SelectorType; name: string; watcher: Watcher }[];
 
   textObserver: MutationObserver | null;
-  onTextChanged: ((text: string | null) => void)[];
+  onTextChangedCallbacks: ((text: string | null) => void)[];
 
-  onAttrChanged: {
+  onAttrChangedCallbacks: {
     name: string;
     callback: (text: string | null) => void;
     observer: MutationObserver | null;
@@ -33,16 +36,16 @@ export class Watcher {
 
     this.element = null;
 
-    this.onCreated = [];
-    this.onRemoved = [];
+    this.onCreatedCallbacks = [];
+    this.onRemovedCallbacks = [];
 
     this.nodeObserver = null;
     this.nodeWatchers = [];
 
     this.textObserver = null;
-    this.onTextChanged = [];
+    this.onTextChangedCallbacks = [];
 
-    this.onAttrChanged = [];
+    this.onAttrChangedCallbacks = [];
 
     this.visibilityAncestor = null;
     this.visibilityObserver = null;
@@ -100,8 +103,11 @@ export class Watcher {
       );
     }
 
-    for (const callback of this.onCreated) {
-      callback(this.element);
+    for (const onCreatedCb of this.onCreatedCallbacks) {
+      const onRemovedCb = onCreatedCb(this.element);
+      if (onRemovedCb) {
+        this.onRemovedCallbacks.push(onRemovedCb);
+      }
     }
 
     for (const { selector, name, watcher } of this.nodeWatchers) {
@@ -110,11 +116,11 @@ export class Watcher {
       }
     }
 
-    for (const callback of this.onTextChanged) {
+    for (const callback of this.onTextChangedCallbacks) {
       callback(this.element.textContent);
     }
 
-    for (const { name, callback } of this.onAttrChanged) {
+    for (const { name, callback } of this.onAttrChangedCallbacks) {
       callback(this.element.getAttribute(name));
     }
 
@@ -145,11 +151,11 @@ export class Watcher {
       child.watcher.disconnect();
     }
 
-    for (const callback of this.onTextChanged) {
+    for (const callback of this.onTextChangedCallbacks) {
       callback(null);
     }
 
-    for (const { callback } of this.onAttrChanged) {
+    for (const { callback } of this.onAttrChangedCallbacks) {
       callback(null);
     }
 
@@ -162,8 +168,9 @@ export class Watcher {
     this.deregisterAttrObservers();
     this.deregisterVisibilityObserver();
 
-    for (const callback of this.onRemoved) {
-      callback(this.element);
+    while (this.onRemovedCallbacks.length > 0) {
+      const onRemovedCb = this.onRemovedCallbacks.shift()!;
+      onRemovedCb();
     }
 
     this.element = null;
@@ -222,7 +229,7 @@ export class Watcher {
       return;
     }
 
-    if (this.onTextChanged.length === 0) {
+    if (this.onTextChangedCallbacks.length === 0) {
       // No callbacks, no need for an observer.
       return;
     }
@@ -230,7 +237,7 @@ export class Watcher {
     const elem = this.assertElement();
 
     this.textObserver = new MutationObserver((_mutations) => {
-      for (const callback of this.onTextChanged) {
+      for (const callback of this.onTextChangedCallbacks) {
         callback(elem.textContent);
       }
     });
@@ -246,7 +253,7 @@ export class Watcher {
   registerAttrObservers(): void {
     const elem = this.assertElement();
 
-    for (const handler of this.onAttrChanged) {
+    for (const handler of this.onAttrChangedCallbacks) {
       if (handler.observer != null) {
         // Already registered.
         continue;
@@ -332,7 +339,7 @@ export class Watcher {
   }
 
   deregisterAttrObservers(): void {
-    for (const handler of this.onAttrChanged) {
+    for (const handler of this.onAttrChangedCallbacks) {
       if (handler.observer == null) {
         // Already unregistered.
         continue;
@@ -357,17 +364,14 @@ export class Watcher {
     this.isVisible = null;
   }
 
-  lifecycle(
-    onCreated: (elem: HTMLElement) => void,
-    onRemoved?: (elem: HTMLElement) => void,
-  ): Watcher {
-    this.onCreated.push(onCreated);
-    if (onRemoved != null) {
-      this.onRemoved.push(onRemoved);
-    }
+  onCreated(onCreatedCb: (elem: HTMLElement) => (() => void) | void): Watcher {
+    this.onCreatedCallbacks.push(onCreatedCb);
 
     if (this.element != null) {
-      onCreated(this.element);
+      const onRemovedCb = onCreatedCb(this.element);
+      if (onRemovedCb) {
+        this.onRemovedCallbacks.push(onRemovedCb);
+      }
     }
 
     return this;
@@ -422,7 +426,7 @@ export class Watcher {
   }
 
   text(callback: (text: string | null) => void): Watcher {
-    this.onTextChanged.push(callback);
+    this.onTextChangedCallbacks.push(callback);
     if (this.element != null) {
       callback(this.element.textContent);
 
@@ -433,7 +437,7 @@ export class Watcher {
   }
 
   attr(name: string, callback: (text: string | null) => void): Watcher {
-    this.onAttrChanged.push({ name, callback, observer: null });
+    this.onAttrChangedCallbacks.push({ name, callback, observer: null });
 
     if (this.element != null) {
       callback(this.element.getAttribute(name));

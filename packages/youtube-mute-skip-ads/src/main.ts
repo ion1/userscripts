@@ -7,7 +7,7 @@ import "./main.css";
 import { debugging } from "./debugging";
 
 import { logPrefix } from "./log";
-import { Watcher } from "./watcher";
+import { Watcher, type OnRemovedCallback } from "./watcher";
 import { getVideoElement, getMuteButton } from "./utils";
 import { disableVisibilityChecks } from "./disableVisibilityChecks";
 
@@ -16,7 +16,7 @@ import { disableVisibilityChecks } from "./disableVisibilityChecks";
 // restore the mute status to the user preference.
 const unmuteNeeded = false;
 
-function adUIAdded(_elem: Element): void {
+function adUIAdded(_elem: Element): OnRemovedCallback | void {
   console.info(logPrefix, "An ad is playing, muting");
 
   const video = getVideoElement();
@@ -41,9 +41,11 @@ function adUIAdded(_elem: Element): void {
       console.debug(logPrefix, `Setting playback rate to`, rate, `failed:`, e);
     }
   }
+
+  return adUIRemoved;
 }
 
-function adUIRemoved(_elem: Element): void {
+function adUIRemoved(): void {
   if (!unmuteNeeded) {
     return;
   }
@@ -78,7 +80,7 @@ const adPlayerOverlayClasses = [
   "ytp-ad-player-overlay-layout", // Seen since 2024-04-06.
 ];
 for (const adPlayerOverlayClass of adPlayerOverlayClasses) {
-  watcher.klass(adPlayerOverlayClass).lifecycle(adUIAdded, adUIRemoved);
+  watcher.klass(adPlayerOverlayClass).onCreated(adUIAdded);
 }
 
 const adSkipButtonClasses = [
@@ -94,21 +96,21 @@ for (const adSkipButtonClass of adSkipButtonClasses) {
     .id("movie_player")
     .klass(adSkipButtonClass)
     .visible()
-    .lifecycle(click(`skip (${adSkipButtonClass})`));
+    .onCreated(click(`skip (${adSkipButtonClass})`));
 }
 
-watcher.klass("ytp-ad-overlay-close-button").lifecycle(click("overlay close"));
+watcher.klass("ytp-ad-overlay-close-button").onCreated(click("overlay close"));
 
 watcher
   .klass("ytp-featured-product")
   .klass("ytp-suggested-action-badge-dismiss-button-icon")
   .visible()
-  .lifecycle(click("suggested action close"));
+  .onCreated(click("suggested action close"));
 
 watcher
   .tag("ytmusic-you-there-renderer")
   .tag("button")
-  .lifecycle(click("are-you-there"));
+  .onCreated(click("are-you-there"));
 
 if (debugging) {
   console.debug(logPrefix, `Started`);
