@@ -96,7 +96,12 @@ for (const adSkipButtonClass of adSkipButtonClasses) {
     .id("movie_player")
     .klass(adSkipButtonClass)
     .visible()
-    .onCreated(click(`skip (${adSkipButtonClass})`));
+    .attr("aria-hidden", (elem, value) => {
+      if (value === null) {
+        /// The aria-hidden attribute was removed.
+        click(`skip (${adSkipButtonClass})`)(elem);
+      }
+    });
 }
 
 watcher.klass("ytp-ad-overlay-close-button").onCreated(click("overlay close"));
