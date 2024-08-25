@@ -5,6 +5,12 @@ export type SelectorType = "id" | "class" | "tag";
 
 export type OnCreatedCallback = (elem: HTMLElement) => OnRemovedCallback | void;
 export type OnRemovedCallback = () => void;
+/// `null` implies null textContent. `undefined` implies that the watcher is
+/// being disconnected.
+export type OnTextChangedCallback = (text: string | null | undefined) => void;
+/// `null` implies no such attribute. `undefined` implies that the watcher is
+/// being disconnected.
+export type OnAttrChangedCallback = (value: string | null | undefined) => void;
 
 export class Watcher {
   name: string;
@@ -18,11 +24,11 @@ export class Watcher {
   nodeWatchers: { selector: SelectorType; name: string; watcher: Watcher }[];
 
   textObserver: MutationObserver | null;
-  onTextChangedCallbacks: ((text: string | null) => void)[];
+  onTextChangedCallbacks: OnTextChangedCallback[];
 
   onAttrChangedCallbacks: {
     name: string;
-    callback: (text: string | null) => void;
+    callback: OnAttrChangedCallback;
     observer: MutationObserver | null;
   }[];
 
@@ -152,11 +158,11 @@ export class Watcher {
     }
 
     for (const callback of this.onTextChangedCallbacks) {
-      callback(null);
+      callback(undefined);
     }
 
     for (const { callback } of this.onAttrChangedCallbacks) {
-      callback(null);
+      callback(undefined);
     }
 
     for (const child of this.visibilityWatchers) {
@@ -425,7 +431,9 @@ export class Watcher {
     return watcher;
   }
 
-  text(callback: (text: string | null) => void): Watcher {
+  /// `null` implies null textContent. `undefined` implies that the watcher is
+  /// being disconnected.
+  text(callback: OnTextChangedCallback): Watcher {
     this.onTextChangedCallbacks.push(callback);
     if (this.element != null) {
       callback(this.element.textContent);
@@ -436,7 +444,9 @@ export class Watcher {
     return this;
   }
 
-  attr(name: string, callback: (text: string | null) => void): Watcher {
+  /// `null` implies no such attribute. `undefined` implies that the watcher is
+  /// being disconnected.
+  attr(name: string, callback: OnAttrChangedCallback): Watcher {
     this.onAttrChangedCallbacks.push({ name, callback, observer: null });
 
     if (this.element != null) {
