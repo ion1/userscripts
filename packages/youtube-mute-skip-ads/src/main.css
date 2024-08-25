@@ -1,3 +1,52 @@
+/* Keep these in sync with the watchers. */
+#movie_player
+  :is(.ytp-ad-skip-button, .ytp-ad-skip-button-modern, .ytp-skip-ad-button) {
+  anchor-name: --youtube-mute-skip-ads-unclickable-button;
+}
+
+body:has(
+    #movie_player
+      :is(
+        .ytp-ad-skip-button,
+        .ytp-ad-skip-button-modern,
+        .ytp-skip-ad-button
+      ):not([style*="display: none"], [aria-hidden="true"])
+  )::after {
+  content: "𝘆𝗼𝘂𝘁𝘂𝗯𝗲-𝗺𝘂𝘁𝗲-𝘀𝗸𝗶𝗽-𝗮𝗱𝘀\A\A"
+    "Unfortunately, YouTube has started to block automated clicks based on isTrusted being false.\A\A"
+    "Please click on the skip button manually.";
+  white-space: pre-line;
+  pointer-events: none;
+  z-index: 9999;
+  position: fixed;
+  position-anchor: --youtube-mute-skip-ads-unclickable-button;
+  padding: 1.5em;
+  border-radius: 1.5em;
+  margin-bottom: 1em;
+  bottom: anchor(--youtube-mute-skip-ads-unclickable-button top);
+  right: anchor(--youtube-mute-skip-ads-unclickable-button right);
+  max-width: 25em;
+  font-size: 1.4rem;
+  line-height: 2rem;
+  font-weight: 400;
+  color: rgb(240 240 240);
+  background-color: rgb(0 0 0 / 0.7);
+  backdrop-filter: blur(10px);
+  animation: fade-in 3s linear;
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  67% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 #movie_player.ad-showing video {
   filter: blur(100px) opacity(0.25) grayscale(0.5);
 }
