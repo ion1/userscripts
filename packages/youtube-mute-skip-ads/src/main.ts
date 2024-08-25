@@ -7,7 +7,11 @@ import "./main.css";
 import { debugging } from "./debugging";
 
 import { logPrefix } from "./log";
-import { Watcher, type OnRemovedCallback } from "./watcher";
+import {
+  Watcher,
+  type OnCreatedCallback,
+  type OnRemovedCallback,
+} from "./watcher";
 import { getVideoElement, getMuteButton } from "./utils";
 import { disableVisibilityChecks } from "./disableVisibilityChecks";
 
@@ -64,10 +68,14 @@ function adUIRemoved(): void {
   elem.click();
 }
 
-function click(description: string) {
+function click(description: string): OnCreatedCallback {
   return (elem: HTMLElement) => {
-    console.info(logPrefix, "Clicking:", description);
-    elem.click();
+    if (elem.getAttribute("aria-hidden")) {
+      console.info(logPrefix, "Not clicking (aria-hidden):", description);
+    } else {
+      console.info(logPrefix, "Clicking:", description);
+      elem.click();
+    }
   };
 }
 
@@ -104,7 +112,10 @@ for (const adSkipButtonClass of adSkipButtonClasses) {
     });
 }
 
-watcher.klass("ytp-ad-overlay-close-button").onCreated(click("overlay close"));
+watcher
+  .klass("ytp-ad-overlay-close-button")
+  .visible()
+  .onCreated(click("overlay close"));
 
 watcher
   .klass("ytp-featured-product")
@@ -115,6 +126,7 @@ watcher
 watcher
   .tag("ytmusic-you-there-renderer")
   .tag("button")
+  .visible()
   .onCreated(click("are-you-there"));
 
 if (debugging) {
