@@ -7,10 +7,16 @@ export type OnCreatedCallback = (elem: HTMLElement) => OnRemovedCallback | void;
 export type OnRemovedCallback = () => void;
 /// `null` implies null textContent. `undefined` implies that the watcher is
 /// being disconnected.
-export type OnTextChangedCallback = (text: string | null | undefined) => void;
+export type OnTextChangedCallback = (
+  elem: HTMLElement,
+  text: string | null | undefined,
+) => void;
 /// `null` implies no such attribute. `undefined` implies that the watcher is
 /// being disconnected.
-export type OnAttrChangedCallback = (value: string | null | undefined) => void;
+export type OnAttrChangedCallback = (
+  elem: HTMLElement,
+  value: string | null | undefined,
+) => void;
 
 export class Watcher {
   name: string;
@@ -123,11 +129,11 @@ export class Watcher {
     }
 
     for (const callback of this.onTextChangedCallbacks) {
-      callback(this.element.textContent);
+      callback(this.element, this.element.textContent);
     }
 
     for (const { name, callback } of this.onAttrChangedCallbacks) {
-      callback(this.element.getAttribute(name));
+      callback(this.element, this.element.getAttribute(name));
     }
 
     // The visibilityObserver will trigger automatically if the element is visible
@@ -158,11 +164,11 @@ export class Watcher {
     }
 
     for (const callback of this.onTextChangedCallbacks) {
-      callback(undefined);
+      callback(this.element, undefined);
     }
 
     for (const { callback } of this.onAttrChangedCallbacks) {
-      callback(undefined);
+      callback(this.element, undefined);
     }
 
     for (const child of this.visibilityWatchers) {
@@ -244,7 +250,7 @@ export class Watcher {
 
     this.textObserver = new MutationObserver((_mutations) => {
       for (const callback of this.onTextChangedCallbacks) {
-        callback(elem.textContent);
+        callback(elem, elem.textContent);
       }
     });
 
@@ -268,7 +274,7 @@ export class Watcher {
       const { name, callback } = handler;
 
       handler.observer = new MutationObserver((_mutations) => {
-        callback(elem.getAttribute(name));
+        callback(elem, elem.getAttribute(name));
       });
 
       handler.observer.observe(elem, {
@@ -436,7 +442,7 @@ export class Watcher {
   text(callback: OnTextChangedCallback): Watcher {
     this.onTextChangedCallbacks.push(callback);
     if (this.element != null) {
-      callback(this.element.textContent);
+      callback(this.element, this.element.textContent);
 
       this.registerTextObserver();
     }
@@ -450,7 +456,7 @@ export class Watcher {
     this.onAttrChangedCallbacks.push({ name, callback, observer: null });
 
     if (this.element != null) {
-      callback(this.element.getAttribute(name));
+      callback(this.element, this.element.getAttribute(name));
 
       this.registerAttrObservers();
     }
