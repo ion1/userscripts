@@ -47,3 +47,50 @@ export function getMuteButton(): HTMLElement | null {
   );
   return null;
 }
+
+export function callMoviePlayerMethod(
+  name: string,
+  onSuccess?: () => void,
+  args?: unknown[],
+): void {
+  try {
+    const movieElem = document.getElementById("movie_player");
+
+    if (movieElem == null) {
+      console.warn(logPrefix, "movie_player element not found");
+      return;
+    }
+
+    const method: unknown = Object.getOwnPropertyDescriptor(
+      movieElem,
+      name,
+    )?.value;
+    if (method == null) {
+      console.warn(
+        logPrefix,
+        `movie_player element has no ${JSON.stringify(name)} property`,
+      );
+      return;
+    }
+
+    if (!(typeof method === "function")) {
+      console.warn(
+        logPrefix,
+        `movie_player element property ${JSON.stringify(name)} is not a function`,
+      );
+      return;
+    }
+
+    method.apply(movieElem, args);
+
+    if (onSuccess != null) {
+      onSuccess();
+    }
+  } catch (e) {
+    console.warn(
+      logPrefix,
+      `movie_player method ${JSON.stringify(name)} failed:`,
+      e,
+    );
+  }
+}

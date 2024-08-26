@@ -12,7 +12,7 @@ import {
   type OnCreatedCallback,
   type OnRemovedCallback,
 } from "./watcher";
-import { getVideoElement, getMuteButton } from "./utils";
+import { getVideoElement, getMuteButton, callMoviePlayerMethod } from "./utils";
 import { disableVisibilityChecks } from "./disableVisibilityChecks";
 
 // Currently, the video element is replaced after an ad, removing the need to unmute
@@ -33,8 +33,11 @@ function adIsPlaying(_elem: Element): OnRemovedCallback | void {
 
   speedup(video);
 
+  const cancelRemovedCallback: OnRemovedCallback = cancelPlayback(video);
+
   return function onRemoved() {
     muteRemovedCallback();
+    cancelRemovedCallback();
   };
 }
 
@@ -80,6 +83,42 @@ function speedup(video: HTMLVideoElement): void {
       console.debug(logPrefix, `Setting playback rate to`, rate, `failed:`, e);
     }
   }
+}
+
+/// Attempt to use the cancelPlayback method on the #movie_player element while
+/// the ad is playing.
+function cancelPlayback(video: HTMLVideoElement): OnRemovedCallback {
+  // Sometimes the video ends up being paused after cancelPlayback. Make sure
+  // it is resumed.
+  let shouldResume = false;
+
+  function doCancelPlayback() {
+    console.info(logPrefix, "Attempting to cancel playback");
+    callMoviePlayerMethod("cancelPlayback", () => {
+      shouldResume = true;
+    });
+  }
+
+  // Since we resume playback after cancelling, make sure to only cancel while
+  // the video is playing.
+  if (video.paused) {
+    console.debug(
+      logPrefix,
+      "Ad paused, waiting for it to play before canceling playback",
+    );
+    video.addEventListener("play", doCancelPlayback);
+  } else {
+    doCancelPlayback();
+  }
+
+  return function onRemoved(): void {
+    video.removeEventListener("play", doCancelPlayback);
+
+    if (shouldResume) {
+      console.info(logPrefix, "Attempting to resume playback");
+      callMoviePlayerMethod("playVideo");
+    }
+  };
 }
 
 function click(description: string): OnCreatedCallback {
