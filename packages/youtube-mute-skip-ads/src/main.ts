@@ -20,8 +20,8 @@ import { disableVisibilityChecks } from "./disableVisibilityChecks";
 // restore the mute status to the user preference.
 const unmuteNeeded = false;
 
-function adUIAdded(_elem: Element): OnRemovedCallback | void {
-  console.info(logPrefix, "An ad is playing, muting");
+function adIsPlaying(_elem: Element): OnRemovedCallback | void {
+  console.info(logPrefix, "An ad is playing, muting and speeding up");
 
   const video = getVideoElement();
   if (video == null) {
@@ -29,27 +29,26 @@ function adUIAdded(_elem: Element): OnRemovedCallback | void {
     return;
   }
 
+  const muteRemovedCallback: OnRemovedCallback = mute(video);
+
+  speedup(video);
+
+  return function onRemoved() {
+    muteRemovedCallback();
+  };
+}
+
+function mute(video: HTMLVideoElement): OnRemovedCallback {
+  console.debug(logPrefix, "Muting");
+
   // Mute the video element directly, leaving the mute state of the YouTube player
   // unchanged (whether muted or unmuted by the user).
   video.muted = true;
 
-  // Speed up the video playback.
-  for (let rate = 16; rate >= 2; rate /= 2) {
-    if (debugging) {
-      console.debug(logPrefix, `Setting playback rate:`, rate);
-    }
-    try {
-      video.playbackRate = rate;
-      break;
-    } catch (e) {
-      console.debug(logPrefix, `Setting playback rate to`, rate, `failed:`, e);
-    }
-  }
-
-  return adUIRemoved;
+  return unmute;
 }
 
-function adUIRemoved(): void {
+function unmute(): void {
   if (!unmuteNeeded) {
     return;
   }
@@ -66,6 +65,21 @@ function adUIRemoved(): void {
   // whether muted or unmuted.
   elem.click();
   elem.click();
+}
+
+function speedup(video: HTMLVideoElement): void {
+  // Speed up the video playback.
+  for (let rate = 16; rate >= 2; rate /= 2) {
+    if (debugging) {
+      console.debug(logPrefix, `Setting playback rate:`, rate);
+    }
+    try {
+      video.playbackRate = rate;
+      break;
+    } catch (e) {
+      console.debug(logPrefix, `Setting playback rate to`, rate, `failed:`, e);
+    }
+  }
 }
 
 function click(description: string): OnCreatedCallback {
@@ -88,7 +102,7 @@ const adPlayerOverlayClasses = [
   "ytp-ad-player-overlay-layout", // Seen since 2024-04-06.
 ];
 for (const adPlayerOverlayClass of adPlayerOverlayClasses) {
-  watcher.klass(adPlayerOverlayClass).onCreated(adUIAdded);
+  watcher.klass(adPlayerOverlayClass).onCreated(adIsPlaying);
 }
 
 const adSkipButtonClasses = [
