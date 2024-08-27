@@ -115,10 +115,40 @@ function cancelPlayback(video: HTMLVideoElement): OnRemovedCallback {
     video.removeEventListener("play", doCancelPlayback);
 
     if (shouldResume) {
-      console.info(logPrefix, "Attempting to resume playback");
-      callMoviePlayerMethod("playVideo");
+      resumePlaybackIfNotAtEnd();
     }
   };
+}
+
+function resumePlaybackIfNotAtEnd(): void {
+  const currentTime = callMoviePlayerMethod("getCurrentTime");
+  const duration = callMoviePlayerMethod("getDuration");
+
+  if (
+    currentTime == null ||
+    duration == null ||
+    typeof currentTime !== "number" ||
+    typeof duration !== "number" ||
+    isNaN(currentTime) ||
+    isNaN(duration)
+  ) {
+    console.warn(
+      logPrefix,
+      `movie_player methods getCurrentTime/getDuration failed, got time: ${JSON.stringify(currentTime)}, duration: ${JSON.stringify(duration)}`,
+    );
+    return;
+  }
+
+  if (duration - currentTime < 1) {
+    console.info(
+      logPrefix,
+      `Video is at the end (${currentTime}/${duration}), not attempting to resume playback`,
+    );
+    return;
+  }
+
+  console.info(logPrefix, "Attempting to resume playback");
+  callMoviePlayerMethod("playVideo");
 }
 
 function click(description: string): OnCreatedCallback {

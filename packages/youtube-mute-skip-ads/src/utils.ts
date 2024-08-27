@@ -50,9 +50,9 @@ export function getMuteButton(): HTMLElement | null {
 
 export function callMoviePlayerMethod(
   name: string,
-  onSuccess?: () => void,
+  onSuccess?: (result: unknown) => void,
   args?: unknown[],
-): void {
+): unknown | void {
   try {
     const movieElem = document.getElementById("movie_player");
 
@@ -81,16 +81,19 @@ export function callMoviePlayerMethod(
       return;
     }
 
-    method.apply(movieElem, args);
+    const result = method.apply(movieElem, args);
 
     if (onSuccess != null) {
-      onSuccess();
+      onSuccess(result);
     }
+
+    return result;
   } catch (e) {
     console.warn(
       logPrefix,
       `movie_player method ${JSON.stringify(name)} failed:`,
       e,
     );
+    return;
   }
 }
