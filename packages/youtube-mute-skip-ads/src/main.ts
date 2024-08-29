@@ -123,6 +123,7 @@ function cancelPlayback(video: HTMLVideoElement): OnRemovedCallback {
 function resumePlaybackIfNotAtEnd(): void {
   const currentTime = callMoviePlayerMethod("getCurrentTime");
   const duration = callMoviePlayerMethod("getDuration");
+  const isAtLiveHead = callMoviePlayerMethod("isAtLiveHead");
 
   if (
     currentTime == null ||
@@ -139,7 +140,17 @@ function resumePlaybackIfNotAtEnd(): void {
     return;
   }
 
-  if (duration - currentTime < 1) {
+  if (isAtLiveHead == null || typeof isAtLiveHead !== "boolean") {
+    console.warn(
+      logPrefix,
+      `movie_player method isAtLiveHead failed, got: ${JSON.stringify(isAtLiveHead)}`,
+    );
+    return;
+  }
+
+  const atEnd = duration - currentTime < 1;
+
+  if (atEnd && !isAtLiveHead) {
     console.info(
       logPrefix,
       `Video is at the end (${currentTime}/${duration}), not attempting to resume playback`,
