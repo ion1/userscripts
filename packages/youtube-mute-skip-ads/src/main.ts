@@ -29,15 +29,16 @@ function adIsPlaying(_elem: Element): OnRemovedCallback | void {
     return;
   }
 
-  const muteRemovedCallback: OnRemovedCallback = mute(video);
-
-  speedup(video);
-
-  const cancelRemovedCallback: OnRemovedCallback = cancelPlayback(video);
+  const onRemovedCallbacks = [
+    mute(video),
+    speedup(video),
+    cancelPlayback(video),
+  ];
 
   return function onRemoved() {
-    muteRemovedCallback();
-    cancelRemovedCallback();
+    for (const callback of onRemovedCallbacks) {
+      callback();
+    }
   };
 }
 
@@ -70,7 +71,9 @@ function unmute(): void {
   elem.click();
 }
 
-function speedup(video: HTMLVideoElement): void {
+function speedup(video: HTMLVideoElement): OnRemovedCallback {
+  const originalRate = video.playbackRate;
+
   // Speed up the video playback.
   for (let rate = 16; rate >= 2; rate /= 2) {
     if (debugging) {
@@ -83,6 +86,21 @@ function speedup(video: HTMLVideoElement): void {
       console.debug(logPrefix, `Setting playback rate to`, rate, `failed:`, e);
     }
   }
+
+  return function onRemoved() {
+    console.debug(logPrefix, `Restoring playback rate:`, originalRate);
+    try {
+      video.playbackRate = originalRate;
+    } catch (e) {
+      console.debug(
+        logPrefix,
+        `Restoring playback rate to`,
+        originalRate,
+        `failed:`,
+        e,
+      );
+    }
+  };
 }
 
 /// Attempt to use the cancelPlayback method on the #movie_player element while
