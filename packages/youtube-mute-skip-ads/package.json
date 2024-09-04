@@ -18,10 +18,10 @@
     "@ion1/eslint-config": "workspace:*",
     "@ion1/prettier-config": "workspace:*",
     "@tsconfig/strictest": "^2.0.5",
-    "postcss": "^8.4.41",
+    "postcss": "^8.4.44",
     "postcss-nesting": "^13.0.0",
     "typescript": "^5.5.4",
-    "vite": "^5.4.2",
+    "vite": "^5.4.3",
     "vite-plugin-monkey": "^4.0.6"
   }
 }

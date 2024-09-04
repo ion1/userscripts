@@ -10,7 +10,7 @@
     "eslint": "^9.9.1",
     "eslint-config-prettier": "^9.1.0",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.2.0"
+    "typescript-eslint": "^8.4.0"
   },
   "devDependencies": {
     "@ion1/prettier-config": "workspace:*"
