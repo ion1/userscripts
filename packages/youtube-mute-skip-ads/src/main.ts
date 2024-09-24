@@ -230,12 +230,6 @@ watcher
   .onCreated(click("overlay close"));
 
 watcher
-  .klass("ytp-featured-product")
-  .klass("ytp-suggested-action-badge-dismiss-button-icon")
-  .visible()
-  .onCreated(click("suggested action close"));
-
-watcher
   .tag("ytmusic-you-there-renderer")
   .tag("button")
   .visible()

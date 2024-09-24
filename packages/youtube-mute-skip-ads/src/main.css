@@ -55,7 +55,6 @@ body:has(
 #movie_player.ad-showing .ytp-title-channel,
 .ytp-visit-advertiser-link,
 .ytp-ad-visit-advertiser-button,
-.ytp-suggested-action-badge,
 ytmusic-app:has(#movie_player.ad-showing)
   ytmusic-player-bar
   :is(.title, .subtitle) {
@@ -65,6 +64,13 @@ ytmusic-app:has(#movie_player.ad-showing)
   &:is(:hover, :focus-within) {
     filter: none;
   }
+}
+
+/* These popups are showing up on top of the video with a hidden dismiss button
+ * since 2024-09-25.
+ */
+.ytp-suggested-action-badge {
+  visibility: hidden !important;
 }
 
 #movie_player.ad-showing .caption-window,
