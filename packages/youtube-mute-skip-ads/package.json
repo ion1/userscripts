@@ -5,7 +5,7 @@
   "homepage": "https://github.com/ion1/userscripts/tree/master/packages/youtube-mute-skip-ads",
   "license": "MIT",
   "private": true,
-  "version": "0.0.26",
+  "version": "0.0.27",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -18,10 +18,10 @@
     "@ion1/eslint-config": "workspace:*",
     "@ion1/prettier-config": "workspace:*",
     "@tsconfig/strictest": "^2.0.5",
-    "postcss": "^8.4.44",
+    "postcss": "^8.4.47",
     "postcss-nesting": "^13.0.0",
-    "typescript": "^5.5.4",
-    "vite": "^5.4.3",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.7",
     "vite-plugin-monkey": "^4.0.6"
   }
 }

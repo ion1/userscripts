@@ -1,6 +1,6 @@
 # YouTube Mute and Skip Ads: Change Log
 
-## next
+## 0.0.27 2024-09-25
 
 - `.ytp-suggested-action-badge` popups are showing up on top of the video with a hidden dismiss button. Hide them using CSS rather than just blurring and trying to click on the button.
 
