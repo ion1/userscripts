@@ -10,3 +10,7 @@ Clicks "yes" on "are you there?" on YouTube Music.
 
 1. Install a browser extension such as [Violentmonkey](https://violentmonkey.github.io/get-it/).
 2. Add [YouTube Mute and Skip Ads](https://greasyfork.org/en/scripts/461341-youtube-mute-and-skip-ads) to it.
+
+## Debug logging
+
+[A build with debug logging](https://ion1.github.io/userscripts/youtube-mute-skip-ads.debug.user.js) is available.

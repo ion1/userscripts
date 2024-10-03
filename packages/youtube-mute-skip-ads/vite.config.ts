@@ -5,7 +5,7 @@ const canonicalUrl =
   "https://ion1.github.io/userscripts/youtube-mute-skip-ads.user.js";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   build: {
     outDir: "../../dist",
     cssMinify: false,
@@ -13,6 +13,9 @@ export default defineConfig({
   plugins: [
     monkey({
       entry: "src/main.ts",
+      build: {
+        fileName: `youtube-mute-skip-ads${mode === "development" ? ".debug" : ""}.user.js`,
+      },
       userscript: {
         name: "YouTube Mute and Skip Ads",
         namespace: "https://github.com/ion1/userscripts",
@@ -25,4 +28,4 @@ export default defineConfig({
       },
     }),
   ],
-});
+}));
