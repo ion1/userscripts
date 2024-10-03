@@ -5,6 +5,7 @@
 - Add a missing `if (debugging)` around a `console.debug` call.
   - TODO: Add logging functions which handle the prefix and the debug mode.
 - Add a build with debug logging.
+- Target modern browser versions when building, reducing polyfills in the output.
 
 ## 0.0.27 2024-09-25
 

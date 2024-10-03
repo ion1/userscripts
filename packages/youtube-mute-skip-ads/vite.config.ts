@@ -7,6 +7,14 @@ const canonicalUrl =
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   build: {
+    target: [
+      "es2022",
+      "chrome126",
+      "edge126",
+      "firefox128",
+      "opera106",
+      "safari17",
+    ],
     outDir: "../../dist",
     cssMinify: false,
   },
