@@ -88,7 +88,9 @@ function speedup(video: HTMLVideoElement): OnRemovedCallback {
   }
 
   return function onRemoved() {
-    console.debug(logPrefix, `Restoring playback rate:`, originalRate);
+    if (debugging) {
+      console.debug(logPrefix, `Restoring playback rate:`, originalRate);
+    }
     try {
       video.playbackRate = originalRate;
     } catch (e) {
