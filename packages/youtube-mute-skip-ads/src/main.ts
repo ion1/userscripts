@@ -72,8 +72,6 @@ function unmute(): void {
 }
 
 function speedup(video: HTMLVideoElement): OnRemovedCallback {
-  const originalRate = video.playbackRate;
-
   // Speed up the video playback.
   for (let rate = 16; rate >= 2; rate /= 2) {
     if (debugging) {
@@ -88,21 +86,46 @@ function speedup(video: HTMLVideoElement): OnRemovedCallback {
   }
 
   return function onRemoved() {
-    if (debugging) {
-      console.debug(logPrefix, `Restoring playback rate:`, originalRate);
-    }
-    try {
-      video.playbackRate = originalRate;
-    } catch (e) {
-      console.debug(
+    const originalRate = callMoviePlayerMethod("getPlaybackRate");
+    if (
+      originalRate == null ||
+      typeof originalRate !== "number" ||
+      isNaN(originalRate)
+    ) {
+      console.warn(
         logPrefix,
-        `Restoring playback rate to`,
-        originalRate,
-        `failed:`,
-        e,
+        `Restoring playback rate failed:`,
+        `unable to query the current playback rate, got: ${JSON.stringify(originalRate)}.`,
+        `Falling back to 1.`,
       );
+
+      restorePlaybackRate(video, 1);
+
+      return;
     }
+
+    restorePlaybackRate(video, originalRate);
   };
+}
+
+function restorePlaybackRate(
+  video: HTMLVideoElement,
+  originalRate: number,
+): void {
+  if (debugging) {
+    console.debug(logPrefix, `Restoring playback rate:`, originalRate);
+  }
+  try {
+    video.playbackRate = originalRate;
+  } catch (e) {
+    console.debug(
+      logPrefix,
+      `Restoring playback rate to`,
+      originalRate,
+      `failed:`,
+      e,
+    );
+  }
 }
 
 /// Attempt to use the cancelPlayback method on the #movie_player element while

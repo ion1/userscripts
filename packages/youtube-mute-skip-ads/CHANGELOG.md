@@ -6,6 +6,9 @@
   - TODO: Add logging functions which handle the prefix and the debug mode.
 - Add a build with debug logging.
 - Target modern browser versions when building, reducing polyfills in the output.
+- Use the `getPlaybackRate` method on the `#movie_player` element.
+
+  `video.playbackRate` may return 1 if an ad is played before the main video is loaded ([issue #2](https://github.com/ion1/userscripts/issues/2)).
 
 ## 0.0.27 2024-09-25
 
