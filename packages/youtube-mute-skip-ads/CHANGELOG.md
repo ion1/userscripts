@@ -1,6 +1,6 @@
 # YouTube Mute and Skip Ads: Change Log
 
-## next
+## 0.0.28 2024-10-03
 
 - Add a missing `if (debugging)` around a `console.debug` call.
   - TODO: Add logging functions which handle the prefix and the debug mode.
