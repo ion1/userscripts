@@ -260,6 +260,20 @@ watcher
   .visible()
   .onCreated(click("are-you-there"));
 
+//Skip short ads
+watcher
+  .tag("ytd-reel-video-renderer")
+  .klass("ad-created")
+  .tag("video")
+  .onCreated((elem) => {
+    if (debugging) {
+      console.debug(logPrefix, `Short ad detected`);
+    }
+    if (elem instanceof HTMLVideoElement) mute(elem);
+    const button = document.querySelector("#navigation-button-down button");
+    if (button instanceof HTMLElement) button.click();
+  });
+
 if (debugging) {
   console.debug(logPrefix, `Started`);
 }
