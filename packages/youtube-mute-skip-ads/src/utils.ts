@@ -1,4 +1,4 @@
-import { logPrefix } from "./log";
+import { error, warn } from "./log";
 
 export const playerId = "movie_player";
 export const videoSelector = "#movie_player video";
@@ -14,8 +14,7 @@ export type PlayerState = {
 export function getVideoElement(): HTMLVideoElement | null {
   const videoElem = document.querySelector(videoSelector);
   if (!(videoElem instanceof HTMLVideoElement)) {
-    console.error(
-      logPrefix,
+    error(
       "Expected",
       JSON.stringify(videoSelector),
       "to be a video element, got:",
@@ -29,8 +28,7 @@ export function getVideoElement(): HTMLVideoElement | null {
 export function getMuteButton(): HTMLElement | null {
   for (const elem of document.querySelectorAll(muteButtonSelector)) {
     if (!(elem instanceof HTMLElement)) {
-      console.error(
-        logPrefix,
+      error(
         "Expected",
         JSON.stringify(muteButtonSelector),
         "to be an HTML element, got:",
@@ -40,11 +38,7 @@ export function getMuteButton(): HTMLElement | null {
     }
     return elem;
   }
-  console.error(
-    logPrefix,
-    "Failed to find",
-    JSON.stringify(muteButtonSelector),
-  );
+  error("Failed to find", JSON.stringify(muteButtonSelector));
   return null;
 }
 
@@ -57,7 +51,7 @@ export function callMoviePlayerMethod(
     const movieElem = document.getElementById("movie_player");
 
     if (movieElem == null) {
-      console.warn(logPrefix, "movie_player element not found");
+      warn("movie_player element not found");
       return;
     }
 
@@ -66,16 +60,12 @@ export function callMoviePlayerMethod(
       name,
     )?.value;
     if (method == null) {
-      console.warn(
-        logPrefix,
-        `movie_player element has no ${JSON.stringify(name)} property`,
-      );
+      warn(`movie_player element has no ${JSON.stringify(name)} property`);
       return;
     }
 
     if (!(typeof method === "function")) {
-      console.warn(
-        logPrefix,
+      warn(
         `movie_player element property ${JSON.stringify(name)} is not a function`,
       );
       return;
@@ -89,11 +79,7 @@ export function callMoviePlayerMethod(
 
     return result;
   } catch (e) {
-    console.warn(
-      logPrefix,
-      `movie_player method ${JSON.stringify(name)} failed:`,
-      e,
-    );
+    warn(`movie_player method ${JSON.stringify(name)} failed:`, e);
     return;
   }
 }

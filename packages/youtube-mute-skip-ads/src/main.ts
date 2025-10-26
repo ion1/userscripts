@@ -4,9 +4,7 @@
 
 import "./main.css";
 
-import { debugging } from "./debugging";
-
-import { logPrefix } from "./log";
+import { debug, debugging, info, warn } from "./log";
 import {
   Watcher,
   type OnCreatedCallback,
@@ -21,7 +19,7 @@ import { disableVisibilityChecks } from "./disableVisibilityChecks";
 const unmuteNeeded = false;
 
 function adIsPlaying(_elem: Element): OnRemovedCallback | void {
-  console.info(logPrefix, "An ad is playing, muting and speeding up");
+  info("An ad is playing, muting and speeding up");
 
   const video = getVideoElement();
   if (video == null) {
@@ -43,7 +41,9 @@ function adIsPlaying(_elem: Element): OnRemovedCallback | void {
 }
 
 function mute(video: HTMLVideoElement): OnRemovedCallback {
-  console.debug(logPrefix, "Muting");
+  if (debugging) {
+    debug("Muting");
+  }
 
   // Mute the video element directly, leaving the mute state of the YouTube player
   // unchanged (whether muted or unmuted by the user).
@@ -57,7 +57,7 @@ function unmute(): void {
     return;
   }
 
-  console.info(logPrefix, "An ad is no longer playing, unmuting");
+  info("An ad is no longer playing, unmuting");
 
   const elem = getMuteButton();
   if (elem == null) {
@@ -75,13 +75,15 @@ function speedup(video: HTMLVideoElement): OnRemovedCallback {
   // Speed up the video playback.
   for (let rate = 16; rate >= 2; rate /= 2) {
     if (debugging) {
-      console.debug(logPrefix, `Setting playback rate:`, rate);
+      debug(`Setting playback rate:`, rate);
     }
     try {
       video.playbackRate = rate;
       break;
     } catch (e) {
-      console.debug(logPrefix, `Setting playback rate to`, rate, `failed:`, e);
+      if (debugging) {
+        debug(`Setting playback rate to`, rate, `failed:`, e);
+      }
     }
   }
 
@@ -92,8 +94,7 @@ function speedup(video: HTMLVideoElement): OnRemovedCallback {
       typeof originalRate !== "number" ||
       isNaN(originalRate)
     ) {
-      console.warn(
-        logPrefix,
+      warn(
         `Restoring playback rate failed:`,
         `unable to query the current playback rate, got: ${JSON.stringify(originalRate)}.`,
         `Falling back to 1.`,
@@ -113,18 +114,14 @@ function restorePlaybackRate(
   originalRate: number,
 ): void {
   if (debugging) {
-    console.debug(logPrefix, `Restoring playback rate:`, originalRate);
+    debug(`Restoring playback rate:`, originalRate);
   }
   try {
     video.playbackRate = originalRate;
   } catch (e) {
-    console.debug(
-      logPrefix,
-      `Restoring playback rate to`,
-      originalRate,
-      `failed:`,
-      e,
-    );
+    if (debugging) {
+      debug(`Restoring playback rate to`, originalRate, `failed:`, e);
+    }
   }
 }
 
@@ -136,7 +133,7 @@ function cancelPlayback(video: HTMLVideoElement): OnRemovedCallback {
   let shouldResume = false;
 
   function doCancelPlayback() {
-    console.info(logPrefix, "Attempting to cancel playback");
+    info("Attempting to cancel playback");
     callMoviePlayerMethod("cancelPlayback", () => {
       shouldResume = true;
     });
@@ -145,10 +142,9 @@ function cancelPlayback(video: HTMLVideoElement): OnRemovedCallback {
   // Since we resume playback after cancelling, make sure to only cancel while
   // the video is playing.
   if (video.paused) {
-    console.debug(
-      logPrefix,
-      "Ad paused, waiting for it to play before canceling playback",
-    );
+    if (debugging) {
+      debug("Ad paused, waiting for it to play before canceling playback");
+    }
     video.addEventListener("play", doCancelPlayback);
   } else {
     doCancelPlayback();
@@ -176,16 +172,14 @@ function resumePlaybackIfNotAtEnd(): void {
     isNaN(currentTime) ||
     isNaN(duration)
   ) {
-    console.warn(
-      logPrefix,
+    warn(
       `movie_player methods getCurrentTime/getDuration failed, got time: ${JSON.stringify(currentTime)}, duration: ${JSON.stringify(duration)}`,
     );
     return;
   }
 
   if (isAtLiveHead == null || typeof isAtLiveHead !== "boolean") {
-    console.warn(
-      logPrefix,
+    warn(
       `movie_player method isAtLiveHead failed, got: ${JSON.stringify(isAtLiveHead)}`,
     );
     return;
@@ -194,23 +188,22 @@ function resumePlaybackIfNotAtEnd(): void {
   const atEnd = duration - currentTime < 1;
 
   if (atEnd && !isAtLiveHead) {
-    console.info(
-      logPrefix,
+    info(
       `Video is at the end (${currentTime}/${duration}), not attempting to resume playback`,
     );
     return;
   }
 
-  console.info(logPrefix, "Attempting to resume playback");
+  info("Attempting to resume playback");
   callMoviePlayerMethod("playVideo");
 }
 
 function click(description: string): OnCreatedCallback {
   return (elem: HTMLElement) => {
     if (elem.getAttribute("aria-hidden")) {
-      console.info(logPrefix, "Not clicking (aria-hidden):", description);
+      info("Not clicking (aria-hidden):", description);
     } else {
-      console.info(logPrefix, "Clicking:", description);
+      info("Clicking:", description);
       elem.click();
     }
   };
@@ -267,7 +260,7 @@ watcher
   .tag("video")
   .onCreated((elem) => {
     if (debugging) {
-      console.debug(logPrefix, `Short ad detected`);
+      debug(`Short ad detected`);
     }
     if (elem instanceof HTMLVideoElement) mute(elem);
     const button = document.querySelector("#navigation-button-down button");
@@ -275,5 +268,5 @@ watcher
   });
 
 if (debugging) {
-  console.debug(logPrefix, `Started`);
+  debug(`Started`);
 }

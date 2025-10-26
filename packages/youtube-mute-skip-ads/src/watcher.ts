@@ -1,5 +1,4 @@
-import { debugging } from "./debugging";
-import { logPrefix } from "./log";
+import { debug, debugging, error } from "./log";
 
 export type SelectorType = "id" | "class" | "tag";
 
@@ -89,8 +88,7 @@ export class Watcher {
       // Watcher already connected.
       if (this.element !== element) {
         // Watcher already connected to a different element.
-        console.error(
-          logPrefix,
+        error(
           `Watcher already connected to`,
           this.element,
           `while trying to connect to`,
@@ -104,11 +102,7 @@ export class Watcher {
     this.visibilityAncestor = visibilityAncestor ?? null;
 
     if (debugging) {
-      console.debug(
-        logPrefix,
-        `${this.name}: Connect:`,
-        this.element.cloneNode(true),
-      );
+      debug(`${this.name}: Connect:`, this.element.cloneNode(true));
     }
 
     for (const onCreatedCb of this.#onCreatedCallbacks) {
@@ -148,11 +142,7 @@ export class Watcher {
     }
 
     if (debugging) {
-      console.debug(
-        logPrefix,
-        `${this.name}: Disconnect:`,
-        this.element.cloneNode(true),
-      );
+      debug(`${this.name}: Disconnect:`, this.element.cloneNode(true));
     }
 
     for (const child of this.#nodeWatchers) {
