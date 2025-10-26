@@ -3,6 +3,9 @@
 ## next
 
 - Handle shorts ads ([PR #3](https://github.com/ion1/userscripts/pull/3), thanks @sim6!)
+- Replace Watcher with code thatsupports observing multiple matching elements.
+
+  Watcher only supported singular elements matching the selectors. However, sometimes there are more than one of them. Implement the observer code in a much simpler way at the expense of a more verbose API. It might be improved later.
 
 ## 0.0.28 2024-10-03
 

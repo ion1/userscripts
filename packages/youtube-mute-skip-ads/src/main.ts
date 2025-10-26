@@ -6,25 +6,130 @@ import "./main.css";
 
 import { debug, debugging, info, warn } from "./log";
 import {
-  Watcher,
-  type OnCreatedCallback,
-  type OnRemovedCallback,
-} from "./watcher";
+  observeAttr,
+  observeHasClass,
+  observeSelector,
+  observeVisible,
+} from "./observe";
 import {
   getVideoElement,
-  getMuteButton,
   callMoviePlayerMethod,
   getShortsVideoElement,
   getShortsDownButton,
 } from "./utils";
 import { disableVisibilityChecks } from "./disableVisibilityChecks";
 
-// Currently, the video element is replaced after an ad, removing the need to unmute
-// it. In the case that changes, enabling this will click on the mute button twice to
-// restore the mute status to the user preference.
-const unmuteNeeded = false;
+function main(): void {
+  disableVisibilityChecks();
 
-function adIsPlaying(_elem: Element): OnRemovedCallback | void {
+  const adPlayerOverlaySelectors = [
+    ".ytp-ad-player-overlay",
+    ".ytp-ad-player-overlay-layout", // Seen since 2024-04-06.
+  ];
+  for (const adPlayerOverlaySelector of adPlayerOverlaySelectors) {
+    observeSelector({
+      selector: adPlayerOverlaySelector,
+      name: adPlayerOverlaySelector,
+      onAdded: adIsPlaying,
+    });
+  }
+
+  observeSelector({
+    selector: "#shorts-player",
+    name: "#shorts-player",
+    onAdded({ elem: shortsRenderer, signal }) {
+      observeHasClass({
+        elem: shortsRenderer,
+        name: "#shorts-player",
+        className: "ad-created",
+        signal,
+        onAdded: shortsAdIsPlaying,
+      });
+    },
+  });
+
+  observeSelector({
+    selector: "#movie_player",
+    name: "#movie_player",
+    onAdded({ elem: moviePlayer, signal }) {
+      const adSkipButtonSelectors = [
+        ".ytp-ad-skip-button",
+        ".ytp-ad-skip-button-modern", // Seen since 2023-11-10.
+        ".ytp-skip-ad-button", // Seen since 2024-04-06.
+      ];
+      // For video ads, .ytp-ad-skip-button is within .ytp-ad-player-overlay,
+      // but for fallback ads when the video fails to load, it's within
+      // ytp-ad-module. All of them are within #movie_player.
+
+      for (const adSkipButtonSelector of adSkipButtonSelectors) {
+        const name = `#movie_player ${adSkipButtonSelector}`;
+
+        observeSelector({
+          root: moviePlayer,
+          selector: adSkipButtonSelector,
+          name,
+          signal,
+          onAdded({ elem: button, signal }) {
+            observeVisible({
+              elem: button,
+              name,
+              signal,
+              onVisible({ signal }) {
+                observeAttr({
+                  elem: button,
+                  name,
+                  attr: "aria-hidden",
+                  signal,
+                  onChanged(ariaHidden) {
+                    if (ariaHidden === null) {
+                      /// The aria-hidden attribute was removed.
+                      click(button, `skip (${adSkipButtonSelector})`);
+                    }
+                  },
+                });
+              },
+            });
+          },
+        });
+      }
+    },
+  });
+
+  observeSelector({
+    selector: ".ytp-ad-overlay-close-button",
+    name: ".ytp-ad-overlay-close-button",
+    onAdded({ elem: button, signal }) {
+      observeVisible({
+        elem: button,
+        name: ".ytp-ad-overlay-close-button",
+        signal,
+        onVisible() {
+          click(button, ".ytp-ad-overlay-close-button");
+        },
+      });
+    },
+  });
+
+  observeSelector({
+    selector: "ytmusic-you-there-renderer button",
+    name: "are-you-there",
+    onAdded({ elem: button, signal }) {
+      observeVisible({
+        elem: button,
+        name: "are-you-there",
+        signal,
+        onVisible() {
+          click(button, "are-you-there");
+        },
+      });
+    },
+  });
+
+  if (debugging) {
+    debug(`Started`);
+  }
+}
+function adIsPlaying({ signal }: { signal: AbortSignal }): void {
   info("An ad is playing, muting and speeding up");
 
   const video = getVideoElement();
@@ -33,35 +138,39 @@ function adIsPlaying(_elem: Element): OnRemovedCallback | void {
     return;
   }
 
-  const onRemovedCallbacks = [
-    mute(video),
-    speedup(video),
-    cancelPlayback(video),
-  ];
-
-  return function onRemoved() {
-    for (const callback of onRemovedCallbacks) {
-      callback();
-    }
-  };
+  mute(video);
+  speedup(video, signal);
+  cancelPlayback(video, signal);
 }
 
-export function shortsAdIsPlaying(_elem: Element): void {
+export function shortsAdIsPlaying({ signal }: { signal: AbortSignal }): void {
   info("A shorts ad is playing, muting and skipping");
 
   const video = getShortsVideoElement();
-  if (video != null) {
-    // Discard the callback. There is no need to unmute as each short has its own player.
-    mute(video);
-  }
+  if (video == null) return;
 
-  const downButton = getShortsDownButton();
-  if (downButton != null) {
-    click("down button")(downButton);
-  }
+  mute(video);
+
+  oncePlaying({
+    elem: video,
+    signal,
+    onWaiting() {
+      if (debugging) {
+        debug(
+          "Waiting for shorts ad to start playback before clicking down button",
+        );
+      }
+    },
+    onPlaying() {
+      const downButton = getShortsDownButton();
+      if (downButton != null) {
+        click(downButton, "down button");
+      }
+    },
+  });
 }
 
-function mute(video: HTMLVideoElement): OnRemovedCallback {
+function mute(video: HTMLVideoElement): void {
   if (debugging) {
     debug("Muting");
   }
@@ -69,30 +178,9 @@ function mute(video: HTMLVideoElement): OnRemovedCallback {
   // Mute the video element directly, leaving the mute state of the YouTube player
   // unchanged (whether muted or unmuted by the user).
   video.muted = true;
-
-  return unmute;
 }
 
-function unmute(): void {
-  if (!unmuteNeeded) {
-    return;
-  }
-
-  info("An ad is no longer playing, unmuting");
-
-  const elem = getMuteButton();
-  if (elem == null) {
-    // The function logs the error.
-    return;
-  }
-
-  // Toggle the mute button twice to reset video.muted to the user preference,
-  // whether muted or unmuted.
-  elem.click();
-  elem.click();
-}
-
-function speedup(video: HTMLVideoElement): OnRemovedCallback {
+function speedup(video: HTMLVideoElement, signal: AbortSignal): void {
   // Speed up the video playback.
   for (let rate = 16; rate >= 2; rate /= 2) {
     if (debugging) {
@@ -108,7 +196,7 @@ function speedup(video: HTMLVideoElement): OnRemovedCallback {
     }
   }
 
-  return function onRemoved() {
+  function onRemoved() {
     const originalRate = callMoviePlayerMethod("getPlaybackRate");
     if (
       originalRate == null ||
@@ -127,7 +215,9 @@ function speedup(video: HTMLVideoElement): OnRemovedCallback {
     }
 
     restorePlaybackRate(video, originalRate);
-  };
+  }
+
+  signal?.addEventListener("abort", onRemoved, { once: true });
 }
 
 function restorePlaybackRate(
@@ -148,36 +238,59 @@ function restorePlaybackRate(
 
 /// Attempt to use the cancelPlayback method on the #movie_player element while
 /// the ad is playing.
-function cancelPlayback(video: HTMLVideoElement): OnRemovedCallback {
-  // Sometimes the video ends up being paused after cancelPlayback. Make sure
-  // it is resumed.
-  let shouldResume = false;
-
+function cancelPlayback(video: HTMLVideoElement, signal: AbortSignal): void {
   function doCancelPlayback() {
     info("Attempting to cancel playback");
     callMoviePlayerMethod("cancelPlayback", () => {
-      shouldResume = true;
+      // Sometimes the video ends up being paused after cancelPlayback. Make sure
+      // it is resumed.
+      signal.addEventListener(
+        "abort",
+        () => {
+          resumePlaybackIfNotAtEnd();
+        },
+        { once: true },
+      );
     });
   }
 
-  // Since we resume playback after cancelling, make sure to only cancel while
+  // Since we resume playback after canceling, make sure to only cancel while
   // the video is playing.
-  if (video.paused) {
-    if (debugging) {
-      debug("Ad paused, waiting for it to play before canceling playback");
-    }
-    video.addEventListener("play", doCancelPlayback);
+  oncePlaying({
+    elem: video,
+    signal,
+    onWaiting() {
+      if (debugging) {
+        debug("Ad paused, waiting for it to play before canceling playback");
+      }
+    },
+    onPlaying: doCancelPlayback,
+  });
+}
+
+function oncePlaying({
+  elem,
+  signal,
+  onWaiting,
+  onPlaying,
+}: {
+  elem: HTMLMediaElement;
+  signal: AbortSignal;
+  onWaiting?: () => void | undefined;
+  onPlaying: () => void;
+}): void {
+  if (elem.paused || elem.readyState < 3) {
+    onWaiting?.();
+    elem.addEventListener(
+      "playing",
+      () => {
+        onPlaying();
+      },
+      { signal, once: true },
+    );
   } else {
-    doCancelPlayback();
+    onPlaying();
   }
-
-  return function onRemoved(): void {
-    video.removeEventListener("play", doCancelPlayback);
-
-    if (shouldResume) {
-      resumePlaybackIfNotAtEnd();
-    }
-  };
 }
 
 function resumePlaybackIfNotAtEnd(): void {
@@ -219,67 +332,15 @@ function resumePlaybackIfNotAtEnd(): void {
   callMoviePlayerMethod("playVideo");
 }
 
-function click(description: string): OnCreatedCallback {
-  return (elem: HTMLElement) => {
-    if (elem.getAttribute("aria-hidden")) {
-      info("Not clicking (aria-hidden):", description);
-    } else {
-      info("Clicking:", description);
-      elem.click();
-    }
-  };
-}
+function click(elem: Element, description: string): void {
+  if (!(elem instanceof HTMLElement)) return;
 
-disableVisibilityChecks();
-
-const watcher = new Watcher("body", document.body);
-
-const adPlayerOverlayClasses = [
-  "ytp-ad-player-overlay",
-  "ytp-ad-player-overlay-layout", // Seen since 2024-04-06.
-];
-for (const adPlayerOverlayClass of adPlayerOverlayClasses) {
-  watcher.klass(adPlayerOverlayClass).onCreated(adIsPlaying);
-}
-
-watcher.tag("ytd-reel-video-renderer").attr("is-ads-overlay", (elem, value) => {
-  if (value != null) {
-    shortsAdIsPlaying(elem);
+  if (elem.getAttribute("aria-hidden")) {
+    info("Not clicking (aria-hidden):", description);
+  } else {
+    info("Clicking:", description);
+    elem.click();
   }
-});
-
-const adSkipButtonClasses = [
-  "ytp-ad-skip-button",
-  "ytp-ad-skip-button-modern", // Seen since 2023-11-10.
-  "ytp-skip-ad-button", // Seen since 2024-04-06.
-];
-// For video ads, ytp-ad-skip-button is within ytp-ad-player-overlay, but for fallback
-// ads when the video fails to load, it's within ytp-ad-module. All of them are within
-// movie_player.
-for (const adSkipButtonClass of adSkipButtonClasses) {
-  watcher
-    .id("movie_player")
-    .klass(adSkipButtonClass)
-    .visible()
-    .attr("aria-hidden", (elem, value) => {
-      if (value === null) {
-        /// The aria-hidden attribute was removed.
-        click(`skip (${adSkipButtonClass})`)(elem);
-      }
-    });
 }
 
-watcher
-  .klass("ytp-ad-overlay-close-button")
-  .visible()
-  .onCreated(click("overlay close"));
-
-watcher
-  .tag("ytmusic-you-there-renderer")
-  .tag("button")
-  .visible()
-  .onCreated(click("are-you-there"));
-
-if (debugging) {
-  debug(`Started`);
-}
+main();
