@@ -47,7 +47,8 @@ body:has(
   }
 }
 
-#movie_player.ad-showing video {
+#movie_player.ad-showing video,
+#shorts-player.ad-created video {
   filter: blur(100px) opacity(0.25) grayscale(0.5);
 }
 
