@@ -10,7 +10,13 @@ import {
   type OnCreatedCallback,
   type OnRemovedCallback,
 } from "./watcher";
-import { getVideoElement, getMuteButton, callMoviePlayerMethod } from "./utils";
+import {
+  getVideoElement,
+  getMuteButton,
+  callMoviePlayerMethod,
+  getShortsVideoElement,
+  getShortsDownButton,
+} from "./utils";
 import { disableVisibilityChecks } from "./disableVisibilityChecks";
 
 // Currently, the video element is replaced after an ad, removing the need to unmute
@@ -38,6 +44,21 @@ function adIsPlaying(_elem: Element): OnRemovedCallback | void {
       callback();
     }
   };
+}
+
+export function shortsAdIsPlaying(_elem: Element): void {
+  info("A shorts ad is playing, muting and skipping");
+
+  const video = getShortsVideoElement();
+  if (video != null) {
+    // Discard the callback. There is no need to unmute as each short has its own player.
+    mute(video);
+  }
+
+  const downButton = getShortsDownButton();
+  if (downButton != null) {
+    click("down button")(downButton);
+  }
 }
 
 function mute(video: HTMLVideoElement): OnRemovedCallback {
@@ -221,6 +242,12 @@ for (const adPlayerOverlayClass of adPlayerOverlayClasses) {
   watcher.klass(adPlayerOverlayClass).onCreated(adIsPlaying);
 }
 
+watcher.tag("ytd-reel-video-renderer").attr("is-ads-overlay", (elem, value) => {
+  if (value != null) {
+    shortsAdIsPlaying(elem);
+  }
+});
+
 const adSkipButtonClasses = [
   "ytp-ad-skip-button",
   "ytp-ad-skip-button-modern", // Seen since 2023-11-10.
@@ -252,20 +279,6 @@ watcher
   .tag("button")
   .visible()
   .onCreated(click("are-you-there"));
-
-//Skip short ads
-watcher
-  .tag("ytd-reel-video-renderer")
-  .klass("ad-created")
-  .tag("video")
-  .onCreated((elem) => {
-    if (debugging) {
-      debug(`Short ad detected`);
-    }
-    if (elem instanceof HTMLVideoElement) mute(elem);
-    const button = document.querySelector("#navigation-button-down button");
-    if (button instanceof HTMLElement) button.click();
-  });
 
 if (debugging) {
   debug(`Started`);

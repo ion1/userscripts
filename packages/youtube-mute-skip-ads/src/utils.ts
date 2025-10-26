@@ -3,7 +3,10 @@ import { error, warn } from "./log";
 export const playerId = "movie_player";
 export const videoSelector = "#movie_player video";
 export const muteButtonSelector =
-  ":is(.ytp-mute-button, ytmusic-player-bar tp-yt-paper-icon-button.volume)";
+  ":is(.ytp-mute-button, ytdDesktopShortsVolumeControlsMuteIconButton, ytmusic-player-bar tp-yt-paper-icon-button.volume)";
+export const shortsPlayerId = "shorts-player";
+export const shortsVideoSelector = "#shorts-player video";
+export const shortsDownButtonSelector = "#navigation-button-down button";
 
 export type PlayerState = {
   currentTime: number;
@@ -12,7 +15,17 @@ export type PlayerState = {
 };
 
 export function getVideoElement(): HTMLVideoElement | null {
-  const videoElem = document.querySelector(videoSelector);
+  return getVideoElementBySelector(videoSelector);
+}
+
+export function getShortsVideoElement(): HTMLVideoElement | null {
+  return getVideoElementBySelector(shortsVideoSelector);
+}
+
+export function getVideoElementBySelector(
+  selector: string,
+): HTMLVideoElement | null {
+  const videoElem = getHTMLElementBySelector(selector);
   if (!(videoElem instanceof HTMLVideoElement)) {
     error(
       "Expected",
@@ -26,7 +39,15 @@ export function getVideoElement(): HTMLVideoElement | null {
 }
 
 export function getMuteButton(): HTMLElement | null {
-  for (const elem of document.querySelectorAll(muteButtonSelector)) {
+  return getHTMLElementBySelector(muteButtonSelector);
+}
+
+export function getShortsDownButton(): HTMLElement | null {
+  return getHTMLElementBySelector(shortsDownButtonSelector);
+}
+
+export function getHTMLElementBySelector(selector: string): HTMLElement | null {
+  for (const elem of document.querySelectorAll(selector)) {
     if (!(elem instanceof HTMLElement)) {
       error(
         "Expected",
@@ -38,7 +59,7 @@ export function getMuteButton(): HTMLElement | null {
     }
     return elem;
   }
-  error("Failed to find", JSON.stringify(muteButtonSelector));
+  error("Failed to find", JSON.stringify(selector));
   return null;
 }
 

@@ -1,5 +1,9 @@
 # YouTube Mute and Skip Ads: Change Log
 
+## next
+
+- Handle shorts ads ([PR #3](https://github.com/ion1/userscripts/pull/3), thanks @sim6!)
+
 ## 0.0.28 2024-10-03
 
 - Add a missing `if (debugging)` around a `console.debug` call.
