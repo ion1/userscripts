@@ -16,6 +16,8 @@ import {
   callMoviePlayerMethod,
   getShortsVideoElement,
   getShortsDownButton,
+  getShortsParentElement,
+  getShortsUpButton,
 } from "./utils";
 import { disableVisibilityChecks } from "./disableVisibilityChecks";
 
@@ -34,17 +36,80 @@ function main(): void {
     });
   }
 
+  let previousShortsParent: WeakRef<Element> | null = null;
+  let currentShortsParent: WeakRef<Element> | null = null;
+
   observeSelector({
     selector: "#shorts-player",
     name: "#shorts-player",
     onAdded({ elem: shortsRenderer, signal }) {
+      const shortsParent = getShortsParentElement(shortsRenderer);
+      if (shortsParent && shortsParent.isConnected) {
+        if (shortsParent !== currentShortsParent?.deref()) {
+          if (debugging) {
+            debug("New shorts parent");
+          }
+
+          [previousShortsParent, currentShortsParent] = [
+            currentShortsParent,
+            new WeakRef(shortsParent),
+          ];
+        }
+      } else {
+        previousShortsParent = null;
+        currentShortsParent = null;
+      }
+
+      // Did we go to an earlier short?
+      let wentBackwards = false;
+
+      if (previousShortsParent != null && currentShortsParent != null) {
+        const previousShortsParentDeref = previousShortsParent.deref();
+        const currentShortsParentDeref = currentShortsParent.deref();
+
+        if (
+          previousShortsParentDeref != null &&
+          currentShortsParentDeref != null
+        ) {
+          const pos = previousShortsParentDeref.compareDocumentPosition(
+            currentShortsParentDeref,
+          );
+
+          if (
+            (pos & Node.DOCUMENT_POSITION_DISCONNECTED) === 0 &&
+            (pos & Node.DOCUMENT_POSITION_PRECEDING) !== 0
+          ) {
+            wentBackwards = true;
+          }
+
+          if (debugging) {
+            debug(
+              "Went",
+              wentBackwards ? "backwards" : "forwards",
+              "in the shorts feed",
+            );
+          }
+        }
+      }
+
+      // Mute ads as quickly as possible.
       observeHasClass({
         elem: shortsRenderer,
         name: "#shorts-player",
         className: "ad-created",
         signal,
-        onAdded: shortsAdIsPlaying,
+        onAdded() {
+          shortsMuteAd();
+        },
       });
+
+      // However, do not click on the directional buttons until YouTube has
+      // moved the short renderer under a new parent and we have computed
+      // `wentBackwards`. That can be determined by the shorts renderer already
+      // having the `ad-created` class when it appears.
+      if (shortsRenderer.classList.contains("ad-created")) {
+        shortsSkipAd({ signal, wentBackwards });
+      }
     },
   });
 
@@ -143,13 +208,38 @@ function adIsPlaying({ signal }: { signal: AbortSignal }): void {
   cancelPlayback(video, signal);
 }
 
-export function shortsAdIsPlaying({ signal }: { signal: AbortSignal }): void {
-  info("A shorts ad is playing, muting and skipping");
+function shortsMuteAd(): void {
+  info("A shorts ad is playing, muting");
+
+  const video = getShortsVideoElement();
+  if (video != null) {
+    mute(video);
+  }
+}
+
+function shortsSkipAd({
+  signal,
+  wentBackwards,
+}: {
+  signal: AbortSignal;
+  wentBackwards: boolean;
+}): void {
+  info("A shorts ad is playing, skipping");
+
+  const [direction, button] = wentBackwards
+    ? ["up", getShortsUpButton()]
+    : ["down", getShortsDownButton()];
 
   const video = getShortsVideoElement();
   if (video == null) return;
 
-  mute(video);
+  if (button == null) {
+    if (debugging) {
+      debug(`No ${direction} button found`);
+    }
+
+    return;
+  }
 
   oncePlaying({
     elem: video,
@@ -157,15 +247,12 @@ export function shortsAdIsPlaying({ signal }: { signal: AbortSignal }): void {
     onWaiting() {
       if (debugging) {
         debug(
-          "Waiting for shorts ad to start playback before clicking down button",
+          `Waiting for shorts ad to start playback before clicking ${direction} button`,
         );
       }
     },
     onPlaying() {
-      const downButton = getShortsDownButton();
-      if (downButton != null) {
-        click(downButton, "down button");
-      }
+      click(button, `${direction} button`);
     },
   });
 }

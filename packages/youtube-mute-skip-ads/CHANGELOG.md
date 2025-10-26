@@ -1,5 +1,9 @@
 # YouTube Mute and Skip Ads: Change Log
 
+## next
+
+- Skip shorts ads backwards if the user was moving backwards in the feed.
+
 ## 0.0.29 2025-10-26
 
 - Handle shorts ads ([PR #3](https://github.com/ion1/userscripts/pull/3), thanks @sim6!)
