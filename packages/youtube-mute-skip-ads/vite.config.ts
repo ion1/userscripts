@@ -1,5 +1,7 @@
 import { defineConfig } from "vite";
 import monkey from "vite-plugin-monkey";
+import { promises as fs } from "fs";
+import path from "path";
 
 const canonicalUrl =
   "https://ion1.github.io/userscripts/youtube-mute-skip-ads.user.js";
@@ -21,6 +23,20 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     monkey({
       entry: "src/main.ts",
+      async generate({ userscript }) {
+        const changelog = await fs.readFile(
+          path.resolve(__dirname, "CHANGELOG.md"),
+        );
+
+        const changelogComment = changelog
+          .toString()
+          .trim()
+          .split("\n")
+          .map((row) => `// ${row}`)
+          .join("\n");
+
+        return userscript + "\n\n" + changelogComment;
+      },
       build: {
         fileName: `youtube-mute-skip-ads${mode === "development" ? ".debug" : ""}.user.js`,
       },

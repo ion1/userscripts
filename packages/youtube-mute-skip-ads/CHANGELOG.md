@@ -1,5 +1,9 @@
 # YouTube Mute and Skip Ads: Change Log
 
+## next
+
+- Include the change log in the script.
+
 ## 0.0.30 2025-10-26
 
 - Skip shorts ads backwards if the user was moving backwards in the feed.

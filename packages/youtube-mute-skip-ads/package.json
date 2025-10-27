@@ -18,6 +18,7 @@
     "@ion1/eslint-config": "workspace:*",
     "@ion1/prettier-config": "workspace:*",
     "@tsconfig/strictest": "^2.0.6",
+    "@types/node": "^24.9.1",
     "postcss": "^8.5.6",
     "postcss-nesting": "^13.0.2",
     "typescript": "^5.9.3",
