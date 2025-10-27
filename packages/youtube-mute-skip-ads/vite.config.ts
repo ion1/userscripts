@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => ({
           .toString()
           .trim()
           .split("\n")
-          .map((row) => `// ${row}`)
+          .map((row) => `// ${row}`.trimEnd())
           .join("\n");
 
         return userscript + "\n\n" + changelogComment;
