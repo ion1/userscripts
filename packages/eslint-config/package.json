@@ -7,10 +7,10 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "eslint": "^9.25.0",
-    "eslint-config-prettier": "^10.1.2",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.30.1"
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.2"
   },
   "devDependencies": {
     "@ion1/prettier-config": "workspace:*"

@@ -7,6 +7,6 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "prettier": "^3.5.3"
+    "prettier": "^3.6.2"
   }
 }
