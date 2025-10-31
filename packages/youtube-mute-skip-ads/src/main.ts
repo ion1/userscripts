@@ -2,7 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore isolatedModules
 
-import "./main.css";
+import "./main.css?no-inline";
 
 import { debug, debugging, info, warn } from "./log";
 import {

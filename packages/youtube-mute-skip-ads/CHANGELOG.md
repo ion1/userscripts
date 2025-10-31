@@ -4,6 +4,7 @@
 
 - Include the change log in the script.
 - CSS: Add `.ytp-video-interstitial-buttoned-centered-layout__content` (a text ad in place of the video).
+- Import CSS with `?no-inline`. It seems to make the string use actual newlines again instead of `\n`.
 
 ## 0.0.30 2025-10-26
 
