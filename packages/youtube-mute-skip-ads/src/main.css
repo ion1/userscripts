@@ -12,6 +12,7 @@ body:has(
         .ytp-skip-ad-button
       ):not([style*="display: none"], [aria-hidden="true"])
   )::after {
+  /* The beginning of `content`: "youtube-mute-skip-ads" using the sans-serif bold characters. */
   content: "𝘆𝗼𝘂𝘁𝘂𝗯𝗲-𝗺𝘂𝘁𝗲-𝘀𝗸𝗶𝗽-𝗮𝗱𝘀\A\A"
     "Unfortunately, YouTube has started to block automated clicks based on isTrusted being false.\A\A"
     "Please click on the skip button manually.";
