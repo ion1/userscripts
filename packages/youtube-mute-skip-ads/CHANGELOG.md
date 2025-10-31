@@ -1,6 +1,6 @@
 # YouTube Mute and Skip Ads: Change Log
 
-## next
+## 31 2025-10-31
 
 - Include the change log in the script.
 - CSS: Add `.ytp-video-interstitial-buttoned-centered-layout__content` (a text ad in place of the video).
