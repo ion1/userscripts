@@ -3,6 +3,7 @@
 ## next
 
 - Include the change log in the script.
+- CSS: Add `.ytp-video-interstitial-buttoned-centered-layout__content` (a text ad in place of the video).
 
 ## 0.0.30 2025-10-26
 

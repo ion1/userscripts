@@ -78,6 +78,7 @@ ytmusic-app:has(#movie_player.ad-showing)
 .ytp-ad-player-overlay-flyout-cta,
 .ytp-ad-player-overlay-layout__player-card-container, /* Seen since 2024-04-06. */
 .ytp-ad-action-interstitial-slot, /* Added on 2024-08-25. */
+.ytp-video-interstitial-buttoned-centered-layout__content, /* Added on 2025-10-31. */
 ytd-action-companion-ad-renderer,
 ytd-display-ad-renderer,
 ytd-ad-slot-renderer,
