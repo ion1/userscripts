@@ -4,7 +4,7 @@ export const playerId = "movie_player";
 export const videoSelector = "#movie_player video";
 export const muteButtonSelector =
   ":is(.ytp-mute-button, ytdDesktopShortsVolumeControlsMuteIconButton, ytmusic-player-bar tp-yt-paper-icon-button.volume)";
-export const shortsRendererSelector = "ytd-reel-video-renderer";
+export const shortsAncestorSelector = ".reel-video-in-sequence-new";
 export const shortsPlayerId = "shorts-player";
 export const shortsVideoSelector = "#shorts-player video";
 export const shortsUpButtonSelector = "#navigation-button-up button";
@@ -69,30 +69,28 @@ export function getHTMLElementBySelector(selector: string): HTMLElement | null {
 }
 
 /**
- * Given any element within an `ytd-reel-video-renderer`, such as the
- * `#shorts-player` descendant, or its `video` descendant, or the
- * `ytd-reel-video-renderer` element itself, return the parent of the
- * `ytd-reel-video-renderer` element.
+ * Given an element within a `.reel-video-in-sequence-new`, such as the `#shorts-player` descendant,
+ * return the `.reel-video-in-sequence-new` element.
  *
  * This is useful for determining the order of adjacent shorts.
  *
  * Returns `null` if no such ancestor is found.
  */
-export function getShortsParentElement(
+export function getShortsAncestorElement(
   elemWithinShort: Element,
 ): Element | null {
-  const shortsRenderer = elemWithinShort.closest(shortsRendererSelector);
-  if (shortsRenderer == null) {
+  const ancestor = elemWithinShort.closest(shortsAncestorSelector);
+  if (ancestor == null) {
     if (debugging) {
       debug(
-        `Failed to find the ${shortsRendererSelector} ancestor of:`,
+        `Failed to find the ${shortsAncestorSelector} ancestor of:`,
         elemWithinShort.cloneNode(true),
       );
     }
     return null;
   }
 
-  return shortsRenderer.parentElement;
+  return ancestor;
 }
 
 export function callMoviePlayerMethod(

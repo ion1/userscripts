@@ -12,55 +12,55 @@ import {
   observeVisible,
 } from "./observe";
 import {
-  getVideoElement,
   callMoviePlayerMethod,
-  getShortsVideoElement,
+  getShortsAncestorElement,
   getShortsDownButton,
-  getShortsParentElement,
   getShortsUpButton,
+  getShortsVideoElement,
+  getVideoElement,
 } from "./utils";
 import { disableVisibilityChecks } from "./disableVisibilityChecks";
 
 function main(): void {
   disableVisibilityChecks();
 
-  let previousShortsParent: WeakRef<Element> | null = null;
-  let currentShortsParent: WeakRef<Element> | null = null;
+  let previousShortsAncestor: WeakRef<Element> | null = null;
+  let currentShortsAncestor: WeakRef<Element> | null = null;
 
   observeSelector({
     selector: "#shorts-player",
     name: "#shorts-player",
     onAdded({ elem: shortsRenderer, signal }) {
-      const shortsParent = getShortsParentElement(shortsRenderer);
-      if (shortsParent && shortsParent.isConnected) {
-        if (shortsParent !== currentShortsParent?.deref()) {
+      const shortsAncestor = getShortsAncestorElement(shortsRenderer);
+      if (shortsAncestor && shortsAncestor.isConnected) {
+        if (shortsAncestor !== currentShortsAncestor?.deref()) {
           if (debugging) {
-            debug("New shorts parent");
+            debug("New shorts ancestor");
           }
 
-          [previousShortsParent, currentShortsParent] = [
-            currentShortsParent,
-            new WeakRef(shortsParent),
+          [previousShortsAncestor, currentShortsAncestor] = [
+            currentShortsAncestor,
+            new WeakRef(shortsAncestor),
           ];
         }
       } else {
-        previousShortsParent = null;
-        currentShortsParent = null;
+        previousShortsAncestor = null;
+        currentShortsAncestor = null;
       }
 
       // Did we go to an earlier short?
       let wentBackwards = false;
 
-      if (previousShortsParent != null && currentShortsParent != null) {
-        const previousShortsParentDeref = previousShortsParent.deref();
-        const currentShortsParentDeref = currentShortsParent.deref();
+      if (previousShortsAncestor != null && currentShortsAncestor != null) {
+        const previousShortsAncestorDeref = previousShortsAncestor.deref();
+        const currentShortsAncestorDeref = currentShortsAncestor.deref();
 
         if (
-          previousShortsParentDeref != null &&
-          currentShortsParentDeref != null
+          previousShortsAncestorDeref != null &&
+          currentShortsAncestorDeref != null
         ) {
-          const pos = previousShortsParentDeref.compareDocumentPosition(
-            currentShortsParentDeref,
+          const pos = previousShortsAncestorDeref.compareDocumentPosition(
+            currentShortsAncestorDeref,
           );
 
           if (
@@ -80,24 +80,15 @@ function main(): void {
         }
       }
 
-      // Mute ads as quickly as possible.
       observeHasClass({
         elem: shortsRenderer,
-        name: "#shorts-player",
+        name: "#shorts-player .ad-created",
         className: "ad-created",
         signal,
-        onAdded() {
-          shortsMuteAd();
+        onAdded: ({ signal }) => {
+          shortsMuteAndSkipAd({ signal, wentBackwards });
         },
       });
-
-      // However, do not click on the directional buttons until YouTube has
-      // moved the short renderer under a new parent and we have computed
-      // `wentBackwards`. That can be determined by the shorts renderer already
-      // having the `ad-created` class when it appears.
-      if (shortsRenderer.classList.contains("ad-created")) {
-        shortsSkipAd({ signal, wentBackwards });
-      }
     },
   });
 
@@ -205,23 +196,14 @@ function adIsPlaying({ signal }: { signal: AbortSignal }): void {
   cancelPlayback(video, signal);
 }
 
-function shortsMuteAd(): void {
-  info("A shorts ad is playing, muting");
-
-  const video = getShortsVideoElement();
-  if (video != null) {
-    mute(video);
-  }
-}
-
-function shortsSkipAd({
+function shortsMuteAndSkipAd({
   signal,
   wentBackwards,
 }: {
   signal: AbortSignal;
   wentBackwards: boolean;
 }): void {
-  info("A shorts ad is playing, skipping");
+  info("A shorts ad is about to play, waiting");
 
   const [direction, button] = wentBackwards
     ? ["up", getShortsUpButton()]
@@ -249,6 +231,8 @@ function shortsSkipAd({
       }
     },
     onPlaying() {
+      info("A shorts ad is playing, muting and skipping");
+      mute(video);
       click(button, `${direction} button`);
     },
   });
