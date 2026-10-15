@@ -1,6 +1,6 @@
 # YouTube Mute and Skip Ads: Change Log
 
-## next 2026-10-16
+## 32 2026-10-16
 
 - Use `#movie_player.ad-interrupting` to detect ads. The previous method seems not to be reliable anymore.
 - Use a new method for muting and skipping shorts ads. The previous method mutes too early and fails to detect the shorts movement direction due to YouTube changes.
