@@ -1,5 +1,9 @@
 # YouTube Mute and Skip Ads: Change Log
 
+## next 2026-10-16
+
+- Use `#movie_player.ad-interrupting` to detect ads. The previous method seems not to be reliable anymore.
+
 ## 31 2025-10-31
 
 - Include the change log in the script.

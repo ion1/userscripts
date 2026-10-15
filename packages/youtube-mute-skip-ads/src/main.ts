@@ -24,18 +24,6 @@ import { disableVisibilityChecks } from "./disableVisibilityChecks";
 function main(): void {
   disableVisibilityChecks();
 
-  const adPlayerOverlaySelectors = [
-    ".ytp-ad-player-overlay",
-    ".ytp-ad-player-overlay-layout", // Seen since 2024-04-06.
-  ];
-  for (const adPlayerOverlaySelector of adPlayerOverlaySelectors) {
-    observeSelector({
-      selector: adPlayerOverlaySelector,
-      name: adPlayerOverlaySelector,
-      onAdded: adIsPlaying,
-    });
-  }
-
   let previousShortsParent: WeakRef<Element> | null = null;
   let currentShortsParent: WeakRef<Element> | null = null;
 
@@ -117,6 +105,14 @@ function main(): void {
     selector: "#movie_player",
     name: "#movie_player",
     onAdded({ elem: moviePlayer, signal }) {
+      observeHasClass({
+        elem: moviePlayer,
+        name: "#movie_player .ad-interrupting",
+        className: "ad-interrupting",
+        signal,
+        onAdded: adIsPlaying,
+      });
+
       const adSkipButtonSelectors = [
         ".ytp-ad-skip-button",
         ".ytp-ad-skip-button-modern", // Seen since 2023-11-10.
@@ -194,6 +190,7 @@ function main(): void {
     debug(`Started`);
   }
 }
+
 function adIsPlaying({ signal }: { signal: AbortSignal }): void {
   info("An ad is playing, muting and speeding up");
 
