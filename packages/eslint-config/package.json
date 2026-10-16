@@ -6,13 +6,18 @@
   "scripts": {
     "format": "prettier --write ."
   },
-  "dependencies": {
-    "eslint": "^9.38.0",
+  "peerDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.2"
+    "typescript-eslint": "^8.71.0"
   },
   "devDependencies": {
-    "@ion1/prettier-config": "workspace:*"
+    "@eslint/js": "^10.0.1",
+    "@ion1/prettier-config": "workspace:*",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.9",
+    "typescript-eslint": "^8.71.0"
   }
 }

@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => ({
         }
 
         const changelog = await fs.readFile(
-          path.resolve(__dirname, "CHANGELOG.md"),
+          path.resolve(import.meta.dirname, "CHANGELOG.md"),
         );
 
         const changelogComment = changelog

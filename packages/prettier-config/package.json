@@ -6,7 +6,10 @@
   "scripts": {
     "format": "prettier --write ."
   },
-  "dependencies": {
-    "prettier": "^3.6.2"
+  "peerDependencies": {
+    "prettier": "^3.9.9"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.9"
   }
 }

@@ -17,12 +17,14 @@
   "devDependencies": {
     "@ion1/eslint-config": "workspace:*",
     "@ion1/prettier-config": "workspace:*",
-    "@tsconfig/strictest": "^2.0.6",
-    "@types/node": "^24.9.1",
-    "postcss": "^8.5.6",
-    "postcss-nesting": "^13.0.2",
-    "typescript": "^5.9.3",
-    "vite": "^7.1.12",
-    "vite-plugin-monkey": "^7.1.4"
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/node": "^26.6.4",
+    "eslint": "^10.11.0",
+    "postcss": "^8.5.28",
+    "postcss-nesting": "^14.0.2",
+    "prettier": "^3.9.9",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vite-plugin-monkey": "^8.1.1"
   }
 }
