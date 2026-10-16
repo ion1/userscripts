@@ -21,18 +21,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
-        name: Install pnpm
+      - uses: pnpm/setup@v3
+        name: Set up pnpm
         with:
-          run_install: false
-
-      - name: Install Node.js
-        uses: actions/setup-node@v7
-        with:
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install
+          require-lockfile: true
+          cache: true
+          save-cache: ${{ github.ref == 'refs/heads/master' }}
 
       - name: Lint project
         run: pnpm run lint
